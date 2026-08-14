@@ -1,0 +1,37 @@
+<div class="list-header">
+  <h2>Incidencias</h2>
+  <a class="btn btn-primary" routerLink="/issues/new">Nueva incidencia</a>
+</div>
+
+@if (errorMessage) {
+  <p class="alert">{{ errorMessage }}</p>
+}
+
+@if (isLoading) {
+  <p class="muted">Cargando...</p>
+} @else if (issues.length === 0) {
+  <p class="muted">No hay incidencias. Creá la primera.</p>
+} @else {
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Título</th>
+          <th>Estado</th>
+          <th>Prioridad</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (issue of issues; track issue.id) {
+          <tr>
+            <td>{{ issue.title }}</td>
+            <td>{{ issue.status }}</td>
+            <td>{{ issue.priority }}</td>
+            <td>{{ issue.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

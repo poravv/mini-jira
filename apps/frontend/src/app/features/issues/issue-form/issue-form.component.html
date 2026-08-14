@@ -1,0 +1,48 @@
+<h2>Nueva incidencia</h2>
+
+@if (errorMessage) {
+  <p class="alert">{{ errorMessage }}</p>
+}
+
+<form [formGroup]="form" (ngSubmit)="save()" novalidate>
+  <div class="field">
+    <label for="title">Título *</label>
+    <input id="title" type="text" formControlName="title" maxlength="150" />
+    @if (title.touched && title.errors?.['required']) {
+      <p class="field-error">El título es obligatorio.</p>
+    }
+    @if (title.errors?.['maxlength']) {
+      <p class="field-error">El título no puede superar los 150 caracteres.</p>
+    }
+  </div>
+
+  <div class="field">
+    <label for="description">Descripción</label>
+    <textarea id="description" formControlName="description" rows="4"></textarea>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="status">Estado</label>
+      <select id="status" formControlName="status">
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ status }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="priority">Prioridad</label>
+      <select id="priority" formControlName="priority">
+        @for (priority of priorities; track priority) {
+          <option [value]="priority">{{ priority }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary" [disabled]="isSaving">Guardar</button>
+    <a class="btn btn-secondary" routerLink="/issues">Cancelar</a>
+  </div>
+</form>

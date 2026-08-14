@@ -1,0 +1,12 @@
+.app-header {
+  background: var(--color-primary);
+  padding: 0.85rem 0;
+  margin-bottom: 1.5rem;
+}
+
+.app-title {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-decoration: none;
+}

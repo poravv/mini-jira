@@ -1,0 +1,38 @@
+# Java / Maven
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+
+# IDEs
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Entorno (nunca versionar credenciales reales)
+.env
+.env.local
+!.env.example
+
+# Logs
+*.log
+firebase-debug.log
+logs/
+
+# Docker overrides locales
+docker-compose.override.yml
+
+# Runtime local de asistentes IA (las skills en .claude/skills/ SÍ se versionan)
+.claude/scheduled_tasks.lock
+.claude/settings.local.json
