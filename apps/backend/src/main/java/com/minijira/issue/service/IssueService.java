@@ -47,6 +47,12 @@ public class IssueService {
         return IssueMapper.toResponse(issue);
     }
 
+    public void deleteById(Long id) {
+        Issue issue = getIssue(id);
+        issueRepository.delete(issue);
+        log.info("Issue deleted: id={}", id);
+    }
+
     private Issue getIssue(Long id) {
         return issueRepository.findById(id).orElseThrow(() -> {
             log.warn("Issue not found: id={}", id);

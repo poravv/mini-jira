@@ -43,10 +43,10 @@ Reglas: el flujo es siempre controller → service → repository; los módulos 
 | Componente | Estado |
 | --- | --- |
 | Infraestructura (Docker Compose, Postgres, Mongo) | ✔ Construido |
-| Módulo incidencias: crear, listar y consultar en `/api/issues` + Swagger + Liquibase | ✔ Construido |
+| Módulo incidencias: crear, listar, consultar y eliminar en `/api/issues` + Swagger + Liquibase | ✔ Construido |
 | Frontend Angular con listado y alta de incidencias | ✔ Construido |
 | Editar incidencia (PUT + formulario de edición) | Pendiente (junior) — primera tarea sugerida |
-| Eliminar incidencia (DELETE + botón en el listado) | Pendiente (junior) |
+| Eliminar incidencia (`DELETE /api/issues/{id}`) | ✔ Backend construido; botón del frontend pendiente |
 | Autenticación JWT, usuarios y roles | Pendiente (junior) |
 | Proyectos | Pendiente (junior) |
 | Comentarios | Pendiente (junior) |

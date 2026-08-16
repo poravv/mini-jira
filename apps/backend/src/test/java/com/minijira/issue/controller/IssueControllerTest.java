@@ -3,6 +3,7 @@ package com.minijira.issue.controller;
 import com.minijira.issue.dto.IssueResponse;
 import com.minijira.issue.entity.IssuePriority;
 import com.minijira.issue.entity.IssueStatus;
+import com.minijira.issue.exception.IssueNotFoundException;
 import com.minijira.issue.service.IssueService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,9 @@ import java.time.Instant;
 import java.util.List;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -50,5 +54,23 @@ class IssueControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Validation failed"))
                 .andExpect(jsonPath("$.fields.title").exists());
+    }
+
+    @Test
+    void should_return_204_when_deleting_an_existing_issue() throws Exception {
+        mockMvc.perform(delete("/api/issues/{id}", 1L))
+                .andExpect(status().isNoContent());
+
+        verify(issueService).deleteById(1L);
+    }
+
+    @Test
+    void should_return_404_when_deleting_a_missing_issue() throws Exception {
+        willThrow(new IssueNotFoundException(99L))
+                .given(issueService).deleteById(99L);
+
+        mockMvc.perform(delete("/api/issues/{id}", 99L))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").exists());
     }
 }
