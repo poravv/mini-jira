@@ -1,10 +1,13 @@
-<h2>Nueva incidencia</h2>
+<h2>{{ isEditing ? 'Editar incidencia' : 'Nueva incidencia' }}</h2>
 
 @if (errorMessage) {
   <p class="alert">{{ errorMessage }}</p>
 }
 
-<form [formGroup]="form" (ngSubmit)="save()" novalidate>
+@if (isLoading) {
+  <p class="muted">Cargando incidencia...</p>
+} @else {
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
   <div class="field">
     <label for="title">Título *</label>
     <input id="title" type="text" formControlName="title" maxlength="150" />
@@ -42,7 +45,8 @@
   </div>
 
   <div class="form-actions">
-    <button type="submit" class="btn btn-primary" [disabled]="isSaving">Guardar</button>
+    <button type="submit" class="btn btn-primary" [disabled]="isSaving">{{ isEditing ? 'Guardar cambios' : 'Guardar' }}</button>
     <a class="btn btn-secondary" routerLink="/issues">Cancelar</a>
   </div>
-</form>
+  </form>
+}

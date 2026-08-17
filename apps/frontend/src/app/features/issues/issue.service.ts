@@ -17,7 +17,15 @@ export class IssueService {
     return this.http.get<Issue[]>(this.baseUrl);
   }
 
+  getById(id: number): Observable<Issue> {
+    return this.http.get<Issue>(`${this.baseUrl}/${id}`);
+  }
+
   create(input: IssueInput): Observable<Issue> {
     return this.http.post<Issue>(this.baseUrl, input);
+  }
+
+  update(id: number, input: IssueInput): Observable<Issue> {
+    return this.http.put<Issue>(`${this.baseUrl}/${id}`, input);
   }
 }

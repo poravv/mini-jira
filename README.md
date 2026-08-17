@@ -65,7 +65,7 @@ curl http://localhost:8080/api/issues
 curl http://localhost:8080/api/issues/1
 ```
 
-El contrato exacto de los campos está en Swagger. **No existen `PUT` ni `DELETE` todavía**: editar y eliminar incidencias son tareas del backlog (ver abajo).
+El contrato exacto de los campos está en Swagger. Las incidencias se pueden editar con `PUT /api/issues/{id}` y eliminar con `DELETE /api/issues/{id}`.
 
 ## Modo desarrollo sin Docker
 
@@ -112,7 +112,6 @@ Detalle completo en [CONTRIBUTING.md](CONTRIBUTING.md).
 
 El estado vivo del proyecto se sigue en [`docs/CHECKLIST.md`](docs/CHECKLIST.md) (se actualiza en cada PR). Las primeras tareas sugeridas son completar el CRUD de incidencias:
 
-1. **Editar incidencia**: implementar `PUT /api/issues/{id}` + formulario de edición (rama sugerida: `feature/editar-incidencia`).
 2. **Eliminar incidencia**: implementar `DELETE /api/issues/{id}` + botón en el listado (rama sugerida: `feature/eliminar-incidencia`).
 
 Cada módulo pendiente es una funcionalidad vertical (pantalla + API + BD + pruebas). Detalle en la sección 6 del [documento de definición](docs/definicion-proyecto-colaborativo-dev-jr.md).

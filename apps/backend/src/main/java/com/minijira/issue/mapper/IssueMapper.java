@@ -35,4 +35,15 @@ public final class IssueMapper {
                 issue.getUpdatedAt()
         );
     }
+
+    public static void updateEntity(Issue issue, IssueRequest request) {
+        issue.setTitle(request.title());
+        issue.setDescription(request.description());
+        if (request.status() != null) {
+            issue.setStatus(request.status());
+        }
+        if (request.priority() != null) {
+            issue.setPriority(request.priority());
+        }
+    }
 }

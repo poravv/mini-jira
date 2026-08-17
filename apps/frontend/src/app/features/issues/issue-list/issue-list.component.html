@@ -20,6 +20,7 @@
           <th>Estado</th>
           <th>Prioridad</th>
           <th>Fecha</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -29,6 +30,7 @@
             <td>{{ issue.status }}</td>
             <td>{{ issue.priority }}</td>
             <td>{{ issue.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td><a class="btn btn-secondary" [routerLink]="['/issues', issue.id, 'edit']">Editar</a></td>
           </tr>
         }
       </tbody>
