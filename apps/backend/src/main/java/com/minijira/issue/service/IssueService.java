@@ -47,6 +47,14 @@ public class IssueService {
         return IssueMapper.toResponse(issue);
     }
 
+    public IssueResponse update(Long id, IssueRequest request) {
+        Issue issue = getIssue(id);
+        IssueMapper.updateEntity(issue, request);
+        Issue updatedIssue = issueRepository.save(issue);
+        log.info("Issue updated: id={} status={} priority={}", updatedIssue.getId(), updatedIssue.getStatus(), updatedIssue.getPriority());
+        return IssueMapper.toResponse(updatedIssue);
+    }
+
     public void deleteById(Long id) {
         Issue issue = getIssue(id);
         issueRepository.delete(issue);

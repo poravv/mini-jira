@@ -21,6 +21,7 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -54,6 +55,22 @@ class IssueControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Validation failed"))
                 .andExpect(jsonPath("$.fields.title").exists());
+    }
+
+    @Test
+    void should_update_an_issue() throws Exception {
+        IssueResponse updatedIssue = new IssueResponse(1L, "Fix registration", "Updated description",
+                IssueStatus.EN_PROGRESO, IssuePriority.ALTA, Instant.now(), Instant.now());
+        given(issueService.update(org.mockito.ArgumentMatchers.eq(1L), org.mockito.ArgumentMatchers.any()))
+                .willReturn(updatedIssue);
+
+        mockMvc.perform(put("/api/issues/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Fix registration\",\"description\":\"Updated description\",\"status\":\"EN_PROGRESO\",\"priority\":\"ALTA\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.title").value("Fix registration"))
+                .andExpect(jsonPath("$.status").value("EN_PROGRESO"));
     }
 
     @Test
