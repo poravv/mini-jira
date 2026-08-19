@@ -48,6 +48,18 @@ class IssueControllerTest {
     }
 
     @Test
+    void should_pass_the_filters_to_the_service_when_listing() throws Exception {
+        given(issueService.findAll(IssueStatus.PENDIENTE, IssuePriority.ALTA)).willReturn(List.of());
+
+        mockMvc.perform(get("/api/issues")
+                        .param("status", "PENDIENTE")
+                        .param("priority", "ALTA"))
+                .andExpect(status().isOk());
+
+        verify(issueService).findAll(IssueStatus.PENDIENTE, IssuePriority.ALTA);
+    }
+
+    @Test
     void should_return_400_with_field_errors_when_title_is_blank() throws Exception {
         mockMvc.perform(post("/api/issues")
                         .contentType(MediaType.APPLICATION_JSON)
