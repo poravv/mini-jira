@@ -106,7 +106,7 @@ Checklist mínimo antes de abrir el PR:
 - [ ] Documentación actualizada.
 - [ ] Podés explicar tu código.
 
-Detalle completo en [CONTRIBUTING.md](CONTRIBUTING.md).
+Paso a paso con diagramas (crear rama → commit → push → PR → merge a `develop`): [`docs/GIT-FLOW.md`](docs/GIT-FLOW.md). Reglas completas en [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Backlog para juniors
 
@@ -137,6 +137,7 @@ Cada módulo pendiente es una funcionalidad vertical (pantalla + API + BD + prue
 | --- | --- |
 | [`docs/definicion-proyecto-colaborativo-dev-jr.md`](docs/definicion-proyecto-colaborativo-dev-jr.md) | Definición completa del proyecto (alcance, módulos, flujo de trabajo) |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Arquitectura: monolito modular, estructura de módulos, construido vs. pendiente |
+| [`docs/GIT-FLOW.md`](docs/GIT-FLOW.md) | Flujo Git paso a paso con diagramas: rama, commit, push, Pull Request y merge a `develop` |
 | [`docs/CHECKLIST.md`](docs/CHECKLIST.md) | Checklist vivo de avance del MVP (se actualiza en cada PR) |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Reglas de colaboración: ramas, commits, PRs y code review |
 | [`AGENTS.md`](AGENTS.md) | Guía para asistentes IA (Claude Code / Codex): contexto y convenciones |
