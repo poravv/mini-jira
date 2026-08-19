@@ -38,7 +38,7 @@ class IssueControllerTest {
     void should_return_issues_when_listing() throws Exception {
         IssueResponse issue = new IssueResponse(1L, "Fix login", null,
                 IssueStatus.PENDIENTE, IssuePriority.MEDIA, Instant.now(), Instant.now());
-        given(issueService.findAll()).willReturn(List.of(issue));
+        given(issueService.findAll(null, null)).willReturn(List.of(issue));
 
         mockMvc.perform(get("/api/issues"))
                 .andExpect(status().isOk())
