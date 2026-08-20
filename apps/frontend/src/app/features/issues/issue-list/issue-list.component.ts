@@ -17,6 +17,7 @@ export class IssueListComponent implements OnInit {
 
   issues: Issue[] = [];
   isLoading = true;
+  deletingIssueId: number | null = null;
   errorMessage = '';
 
   ngOnInit(): void {
@@ -38,4 +39,23 @@ export class IssueListComponent implements OnInit {
     });
   }
 
+  deleteIssue(issue: Issue): void {
+    const shouldDelete = window.confirm(`¿Seguro que querés eliminar la incidencia "${issue.title}"?`);
+    if (!shouldDelete) {
+      return;
+    }
+
+    this.deletingIssueId = issue.id;
+    this.errorMessage = '';
+    this.issueService.delete(issue.id).subscribe({
+      next: () => {
+        this.issues = this.issues.filter((currentIssue) => currentIssue.id !== issue.id);
+        this.deletingIssueId = null;
+      },
+      error: () => {
+        this.errorMessage = 'No se pudo eliminar la incidencia.';
+        this.deletingIssueId = null;
+      }
+    });
+  }
 }
