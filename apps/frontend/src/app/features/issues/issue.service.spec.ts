@@ -51,4 +51,12 @@ describe('IssueService', () => {
     expect(request.request.body).toEqual(input);
     request.flush(issue);
   });
+
+  it('elimina una incidencia con DELETE', () => {
+    service.delete(7).subscribe();
+
+    const request = httpTesting.expectOne('/api/issues/7');
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null);
+  });
 });
