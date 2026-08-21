@@ -38,13 +38,25 @@ class IssueControllerTest {
     void should_return_issues_when_listing() throws Exception {
         IssueResponse issue = new IssueResponse(1L, "Fix login", null,
                 IssueStatus.PENDIENTE, IssuePriority.MEDIA, Instant.now(), Instant.now());
-        given(issueService.findAll()).willReturn(List.of(issue));
+        given(issueService.findAll(null, null)).willReturn(List.of(issue));
 
         mockMvc.perform(get("/api/issues"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
                 .andExpect(jsonPath("$[0].title").value("Fix login"))
                 .andExpect(jsonPath("$[0].status").value("PENDIENTE"));
+    }
+
+    @Test
+    void should_pass_the_filters_to_the_service_when_listing() throws Exception {
+        given(issueService.findAll(IssueStatus.PENDIENTE, IssuePriority.ALTA)).willReturn(List.of());
+
+        mockMvc.perform(get("/api/issues")
+                        .param("status", "PENDIENTE")
+                        .param("priority", "ALTA"))
+                .andExpect(status().isOk());
+
+        verify(issueService).findAll(IssueStatus.PENDIENTE, IssuePriority.ALTA);
     }
 
     @Test

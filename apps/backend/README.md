@@ -47,7 +47,7 @@ docker run -p 8080:8080 -e DB_HOST=host.docker.internal mini-jira-backend
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| `GET` | `/api/issues` | Listar issues |
+| `GET` | `/api/issues` | Listar issues; acepta `status` y `priority` (opcionales) y devuelve las mas urgentes primero |
 | `GET` | `/api/issues/{id}` | Obtener un issue (404 si no existe) |
 | `POST` | `/api/issues` | Crear issue (201; 400 con errores por campo si falla validación) |
 

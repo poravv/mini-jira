@@ -58,8 +58,11 @@ curl -X POST http://localhost:8080/api/issues \
   -H "Content-Type: application/json" \
   -d '{"title": "Error al guardar", "description": "Falla el formulario de alta", "priority": "ALTA", "status": "PENDIENTE"}'
 
-# Listar incidencias
+# Listar incidencias (ordenadas de la mas urgente a la menos urgente)
 curl http://localhost:8080/api/issues
+
+# Listar filtrando por estado y/o prioridad (ambos parametros son opcionales)
+curl "http://localhost:8080/api/issues?status=PENDIENTE&priority=ALTA"
 
 # Consultar una incidencia
 curl http://localhost:8080/api/issues/1

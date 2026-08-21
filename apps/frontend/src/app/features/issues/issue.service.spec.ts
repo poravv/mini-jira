@@ -59,4 +59,23 @@ describe('IssueService', () => {
     expect(request.request.method).toBe('DELETE');
     request.flush(null);
   });
+
+  it('should_send_status_and_priority_as_query_params_when_filtering', () => {
+    service.getAll('EN_PROGRESO', 'ALTA').subscribe();
+
+    const request = httpTesting.expectOne(
+      (req) => req.url === '/api/issues' && req.params.get('status') === 'EN_PROGRESO' && req.params.get('priority') === 'ALTA'
+    );
+    expect(request.request.method).toBe('GET');
+    request.flush([]);
+  });
+
+  it('should_not_send_query_params_when_no_filter_is_given', () => {
+    service.getAll().subscribe();
+
+    const request = httpTesting.expectOne('/api/issues');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.keys().length).toBe(0);
+    request.flush([]);
+  });
 });

@@ -2,6 +2,8 @@ package com.minijira.issue.controller;
 
 import com.minijira.issue.dto.IssueRequest;
 import com.minijira.issue.dto.IssueResponse;
+import com.minijira.issue.entity.IssuePriority;
+import com.minijira.issue.entity.IssueStatus;
 import com.minijira.issue.service.IssueService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,9 +38,11 @@ public class IssueController {
     }
 
     @GetMapping
-    @Operation(summary = "List all issues")
-    public List<IssueResponse> list() {
-        return issueService.findAll();
+    @Operation(summary = "List issues",
+            description = "Filtra por estado y prioridad (ambos opcionales) y devuelve las incidencias más urgentes primero.")
+    public List<IssueResponse> list(@RequestParam(required = false) IssueStatus status,
+                                    @RequestParam(required = false) IssuePriority priority) {
+        return issueService.findAll(status, priority);
     }
 
     @GetMapping("/{id}")
