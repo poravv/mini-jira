@@ -3,6 +3,8 @@ package com.minijira.issue.service;
 import com.minijira.issue.dto.IssueRequest;
 import com.minijira.issue.dto.IssueResponse;
 import com.minijira.issue.entity.Issue;
+import com.minijira.issue.entity.IssuePriority;
+import com.minijira.issue.entity.IssueStatus;
 import com.minijira.issue.exception.IssueNotFoundException;
 import com.minijira.issue.mapper.IssueMapper;
 import com.minijira.issue.repository.IssueRepository;
@@ -11,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -23,15 +26,25 @@ public class IssueService {
 
     private static final Logger log = LoggerFactory.getLogger(IssueService.class);
 
+    /** Orden del listado: las más urgentes primero y, a igual prioridad, las más recientes antes. */
+    private static final Comparator<Issue> MAS_URGENTES_PRIMERO =
+            Comparator.comparing(Issue::getPriority)
+                    .thenComparing(Issue::getUpdatedAt, Comparator.reverseOrder());
+
     private final IssueRepository issueRepository;
 
     public IssueService(IssueRepository issueRepository) {
         this.issueRepository = issueRepository;
     }
 
+    /**
+     * Lista incidencias aplicando los filtros que vengan informados (ambos son opcionales)
+     * y las devuelve ordenadas por prioridad, de la más urgente a la menos urgente.
+     */
     @Transactional(readOnly = true)
-    public List<IssueResponse> findAll() {
-        return issueRepository.findAll().stream()
+    public List<IssueResponse> findAll(IssueStatus status, IssuePriority priority) {
+        return issueRepository.search(status, priority).stream()
+                .sorted(MAS_URGENTES_PRIMERO)
                 .map(IssueMapper::toResponse)
                 .toList();
     }

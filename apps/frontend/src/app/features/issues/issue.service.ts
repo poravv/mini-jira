@@ -1,8 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { Issue, IssueInput } from './issue.model';
+import { Issue, IssueInput, IssuePriority, IssueStatus } from './issue.model';
 
 /**
  * Cliente HTTP del recurso issues: única pieza que habla con el backend (/api/issues,
@@ -13,8 +13,15 @@ export class IssueService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/issues';
 
-  getAll(): Observable<Issue[]> {
-    return this.http.get<Issue[]>(this.baseUrl);
+  getAll(status?: IssueStatus, priority?: IssuePriority): Observable<Issue[]> {
+    let params = new HttpParams();
+    if (status) {
+      params = params.set('status', status);
+    }
+    if (priority) {
+      params = params.set('priority', priority);
+    }
+    return this.http.get<Issue[]>(this.baseUrl, { params });
   }
 
   getById(id: number): Observable<Issue> {
@@ -29,7 +36,7 @@ export class IssueService {
     return this.http.put<Issue>(`${this.baseUrl}/${id}`, input);
   }
 
-    delete(id: number): Observable<void> {
+  delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 }

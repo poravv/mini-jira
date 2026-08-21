@@ -3,6 +3,28 @@
   <a class="btn btn-primary" routerLink="/issues/new">Nueva incidencia</a>
 </div>
 
+<div class="filters">
+  <div class="field">
+    <label for="filter-status">Estado</label>
+    <select id="filter-status" name="filter-status" [(ngModel)]="status" (ngModelChange)="loadIssues()">
+      <option value="">Todos</option>
+      @for (issueStatus of statuses; track issueStatus) {
+        <option [value]="issueStatus">{{ issueStatus }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="filter-priority">Prioridad</label>
+    <select id="filter-priority" name="filter-priority" [(ngModel)]="priority" (ngModelChange)="loadIssues()">
+      <option value="">Todos</option>
+      @for (issuePriority of priorities; track issuePriority) {
+        <option [value]="issuePriority">{{ issuePriority }}</option>
+      }
+    </select>
+  </div>
+</div>
+
 @if (errorMessage) {
   <p class="alert">{{ errorMessage }}</p>
 }
@@ -30,17 +52,15 @@
             <td>{{ issue.status }}</td>
             <td>{{ issue.priority }}</td>
             <td>{{ issue.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
-            <td> <a class="btn btn-secondary"
-                    [routerLink]="['/issues', issue.id, 'edit']">
-                    Editar
-                 </a>
-
+            <td class="actions">
+              <a class="btn btn-secondary" [routerLink]="['/issues', issue.id, 'edit']">Editar</a>
               <button
                 type="button"
-               class="btn btn-secondary"
-               (click)="deleteIssue(issue)">
-               Eliminar
-             </button>
+                class="btn btn-danger"
+                [disabled]="deletingIssueId === issue.id"
+                (click)="deleteIssue(issue)">
+                {{ deletingIssueId === issue.id ? 'Eliminando...' : 'Eliminar' }}
+              </button>
             </td>
           </tr>
         }

@@ -5,6 +5,38 @@
   margin-bottom: 1rem;
 }
 
+.filters {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.filters .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.filters label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.filters select {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font: inherit;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.filters select:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
 .table-wrapper {
   overflow-x: auto;
   background: var(--color-surface);
@@ -32,4 +64,10 @@ th {
 
 tbody tr:last-child td {
   border-bottom: none;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
 }
