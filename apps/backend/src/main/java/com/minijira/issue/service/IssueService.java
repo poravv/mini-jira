@@ -29,7 +29,7 @@ public class IssueService {
     /** Orden del listado: las más urgentes primero y, a igual prioridad, las más recientes antes. */
     private static final Comparator<Issue> MAS_URGENTES_PRIMERO =
             Comparator.comparing(Issue::getPriority)
-                    .thenComparing(Issue::getCreatedAt, Comparator.reverseOrder());
+                    .thenComparing(Issue::getUpdatedAt, Comparator.reverseOrder());
 
     private final IssueRepository issueRepository;
 
