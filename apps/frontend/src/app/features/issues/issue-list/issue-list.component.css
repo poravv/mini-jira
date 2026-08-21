@@ -33,3 +33,9 @@ th {
 tbody tr:last-child td {
   border-bottom: none;
 }
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
+}

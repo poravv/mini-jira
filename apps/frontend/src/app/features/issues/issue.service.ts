@@ -28,4 +28,8 @@ export class IssueService {
   update(id: number, input: IssueInput): Observable<Issue> {
     return this.http.put<Issue>(`${this.baseUrl}/${id}`, input);
   }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
 }
