@@ -37,5 +37,20 @@ export class IssueListComponent implements OnInit {
       }
     });
   }
+    deleteIssue(issue: Issue): void {
+    const confirmed = window.confirm(
+      `¿Eliminar la incidencia "${issue.title}"?`
+    );
 
+    if (!confirmed) {
+      return;
+    }
+
+    this.issueService.delete(issue.id).subscribe({
+      next: () => this.loadIssues(),
+      error: () => {
+        this.errorMessage = 'No se pudo eliminar la incidencia.';
+      }
+    });
+  }
 }

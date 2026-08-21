@@ -30,7 +30,18 @@
             <td>{{ issue.status }}</td>
             <td>{{ issue.priority }}</td>
             <td>{{ issue.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
-            <td><a class="btn btn-secondary" [routerLink]="['/issues', issue.id, 'edit']">Editar</a></td>
+            <td> <a class="btn btn-secondary"
+                    [routerLink]="['/issues', issue.id, 'edit']">
+                    Editar
+                 </a>
+
+              <button
+                type="button"
+               class="btn btn-secondary"
+               (click)="deleteIssue(issue)">
+               Eliminar
+             </button>
+            </td>
           </tr>
         }
       </tbody>
