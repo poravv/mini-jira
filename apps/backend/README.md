@@ -2,7 +2,7 @@
 
 REST API del issue tracker **mini-jira** (proyecto de práctica). Spring Boot 3.4 + Java 21 + PostgreSQL + Liquibase.
 
-Monolito modular: paquete base `com.minijira`, módulo `issue` (controller / service / repository / entity / dto / mapper / exception) y paquete `common` (manejo global de errores).
+Monolito modular: paquete base `com.minijira`, módulo `issue` (controller / service / repository / entity / dto / mapper / exception), módulo `weather` (proxy de Open-Meteo, sin base de datos) y paquete `common` (manejo global de errores).
 
 ## Requisitos
 
@@ -50,10 +50,13 @@ docker run -p 8080:8080 -e DB_HOST=host.docker.internal mini-jira-backend
 | `GET` | `/api/issues` | Listar issues; acepta `status` y `priority` (opcionales) y devuelve las mas urgentes primero |
 | `GET` | `/api/issues/{id}` | Obtener un issue (404 si no existe) |
 | `POST` | `/api/issues` | Crear issue (201; 400 con errores por campo si falla validación) |
+| `GET` | `/api/weather` | Clima actual de Asunción vía [Open-Meteo](https://open-meteo.com) (503 si el proveedor falla o tarda más de 3s) |
 
 **A propósito no existen `PUT` ni `DELETE`**: editar y eliminar incidencias son tareas pendientes del equipo (ver backlog en el README raíz y `docs/CHECKLIST.md`).
 
 Modelo `Issue`: `title` (requerido, máx. 150), `description` (opcional), `status` (`PENDIENTE` | `EN_PROGRESO` | `RESUELTA` | `CERRADA`, default `PENDIENTE`), `priority` (`BAJA` | `MEDIA` | `ALTA` | `CRITICA`, default `MEDIA`), `createdAt` / `updatedAt` automáticos.
+
+Respuesta de `/api/weather`: `{ "city": "Asunción", "temperature": 24.1, "humidity": 60, "weatherCode": 3, "windSpeed": 12.3 }`. La URL del proveedor se configura en `weather.open-meteo.url` y los timeouts en `spring.http.client.*` (`application.yml`).
 
 No hay configuración de CORS: el frontend siempre llama a `/api` con rutas relativas a través de un proxy (el dev server de Angular en desarrollo, nginx en Docker), así que el navegador nunca hace una petición cross-origin.
 
