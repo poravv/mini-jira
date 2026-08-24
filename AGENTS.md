@@ -14,6 +14,7 @@ Mini-Jira: plataforma de gestión de incidencias con fines formativos para desar
 ## Contrato de la API
 
 - Incidencias en `/api/issues`: GET lista, GET por id y POST. **No existen PUT ni DELETE a propósito** — editar y eliminar son tareas pendientes del equipo (ver `docs/CHECKLIST.md`).
+- Clima en `/api/weather`: GET del clima actual de Asunción (proxy de Open-Meteo; 503 si el proveedor externo falla). No usa base de datos.
 - Swagger: `http://localhost:8080/swagger-ui.html` — es la fuente de verdad del contrato.
 - Migraciones de esquema SOLO vía changesets de Liquibase (nunca DDL manual ni `ddl-auto`).
 - Variables de entorno del backend: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`.
