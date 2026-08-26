@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-insert-admin-user
+      author: mini-jira
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM usuario WHERE username = 'admin'
+      changes:
+        - insert:
+            tableName: usuario
+            columns:
+              - column: { name: username, value: admin }
+              - column: { name: email, value: admin@minijira.local }
+              # DEV ONLY: BCrypt(10) de "admin123" (no es un secreto, es el hash). Cambiar en entornos reales.
+              - column: { name: password_hash, value: "$2a$10$qGiBnO6Oxj//cmOnriWTieXpAaMcso2a8FRP1/zyKAFl0HT.c1Maa" }
+              - column: { name: first_name, value: Admin }
+              - column: { name: last_name, value: Admin }
+              - column: { name: is_active, valueBoolean: true }
+              - column: { name: role, value: ADMIN }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }
