@@ -37,11 +37,15 @@ El `Dockerfile` es multi-stage:
 
 ```
 src/app/features/issues/
-├── issue-list/        # tabla de incidencias
-├── issue-form/        # alta (reactive forms)
+├── issue-list/        # tabla de incidencias, con botón eliminar
+├── issue-form/        # alta y edición (reactive forms)
 ├── issue.model.ts     # tipos del recurso Issue
-├── issue.service.ts   # llamadas HTTP a /api/issues
+├── issue.service.ts   # llamadas HTTP a /api/issues (GET, GET id, POST, PUT, DELETE)
 └── issues.routes.ts   # rutas lazy de la feature
 ```
 
-Rutas: `/issues` (listado) y `/issues/new` (alta). **Editar y eliminar incidencias no existen todavía**: son tareas pendientes del equipo (ver `docs/CHECKLIST.md` en la raíz).
+Rutas: `/issues` (listado), `/issues/new` (alta) y `/issues/:id/edit` (edición, mismo `IssueFormComponent` que el alta). En el listado, cada fila tiene un botón para eliminar la incidencia: pide confirmación con `window.confirm` y, si se confirma, llama a `DELETE /api/issues/{id}` y la saca de la tabla.
+
+## Módulo weather
+
+`WeatherCardComponent` (`src/app/features/weather/weather-card/`) se muestra en el header de `AppComponent`, siempre visible en cualquier ruta. Pide el clima actual con `WeatherService.getCurrent()` (`GET /api/weather`) y maneja tres estados: cargando, error (si el backend devuelve 503) y clima mostrado. El código WMO del clima se traduce a una descripción corta en español con `describeWeatherCode()` (`weather.model.ts`). Más detalle del proxy contra Open-Meteo en el backend: [`docs/RESTCLIENT-PROXY.md`](../../docs/RESTCLIENT-PROXY.md).
