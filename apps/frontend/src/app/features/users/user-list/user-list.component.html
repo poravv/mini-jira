@@ -1,0 +1,58 @@
+<div class="list-header">
+  <h2>Usuarios</h2>
+  <a class="btn btn-primary" routerLink="/users/new">Nuevo usuario</a>
+</div>
+
+<div class="filters">
+  <div class="field">
+    <label for="filter-active">Estado</label>
+    <select id="filter-active" name="filter-active" [(ngModel)]="activeFilter" (ngModelChange)="loadUsers()">
+      <option value="all">Todos</option>
+      <option value="active">Activos</option>
+      <option value="inactive">Inactivos</option>
+    </select>
+  </div>
+</div>
+
+@if (errorMessage) {
+  <p class="alert">{{ errorMessage }}</p>
+}
+
+@if (isLoading) {
+  <p class="muted">Cargando usuarios...</p>
+} @else if (users.length === 0) {
+  <p class="muted">No hay usuarios para mostrar.</p>
+} @else {
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Nombre</th>
+          <th>Rol</th>
+          <th>Estado</th>
+          <th>Alta</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of users; track user.id) {
+          <tr>
+            <td><strong>{{ user.username }}</strong><br /><span class="muted">{{ user.email }}</span></td>
+            <td>{{ user.firstName }} {{ user.lastName }}</td>
+            <td>{{ roleLabel(user.role) }}</td>
+            <td><span [class]="user.isActive ? 'status-active' : 'status-inactive'">{{ user.isActive ? 'Activo' : 'Inactivo' }}</span></td>
+            <td>{{ user.createdAt | date: 'dd/MM/yyyy' }}</td>
+            <td class="actions">
+              <a class="btn btn-secondary" [routerLink]="['/users', user.id, 'edit']">Editar</a>
+              <button type="button" class="btn" [class.btn-danger]="user.isActive" [class.btn-secondary]="!user.isActive"
+                      [disabled]="updatingUserId === user.id" (click)="changeStatus(user)">
+                {{ updatingUserId === user.id ? 'Guardando...' : (user.isActive ? 'Desactivar' : 'Activar') }}
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

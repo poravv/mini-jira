@@ -1,70 +1,77 @@
-<div class="list-header">
-  <h2>Incidencias</h2>
-  <a class="btn btn-primary" routerLink="/issues/new">Nueva incidencia</a>
-</div>
-
-<div class="filters">
-  <div class="field">
-    <label for="filter-status">Estado</label>
-    <select id="filter-status" name="filter-status" [(ngModel)]="status" (ngModelChange)="loadIssues()">
-      <option value="">Todos</option>
-      @for (issueStatus of statuses; track issueStatus) {
-        <option [value]="issueStatus">{{ issueStatus }}</option>
-      }
-    </select>
-  </div>
-
-  <div class="field">
-    <label for="filter-priority">Prioridad</label>
-    <select id="filter-priority" name="filter-priority" [(ngModel)]="priority" (ngModelChange)="loadIssues()">
-      <option value="">Todos</option>
-      @for (issuePriority of priorities; track issuePriority) {
-        <option [value]="issuePriority">{{ issuePriority }}</option>
-      }
-    </select>
-  </div>
-</div>
-
-@if (errorMessage) {
-  <p class="alert">{{ errorMessage }}</p>
-}
-
-@if (isLoading) {
-  <p class="muted">Cargando...</p>
-} @else if (issues.length === 0) {
-  <p class="muted">No hay incidencias. Creá la primera.</p>
+@if (!session.currentUser()) {
+  <section class="welcome-message">
+    <p>¿Estás listo para trabajar?</p>
+    <a class="btn btn-primary" routerLink="/users/account">Ingresar o crear cuenta</a>
+  </section>
 } @else {
-  <div class="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th>Título</th>
-          <th>Estado</th>
-          <th>Prioridad</th>
-          <th>Fecha</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (issue of issues; track issue.id) {
-          <tr>
-            <td>{{ issue.title }}</td>
-            <td>{{ issue.status }}</td>
-            <td>{{ issue.priority }}</td>
-            <td>{{ issue.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
-            <td class="actions">
-              <a class="btn btn-secondary" [routerLink]="['/issues', issue.id, 'edit']">Editar</a>
-              <button
-                type="button"
-                class="btn btn-danger"
-                [disabled]="deletingIssueId === issue.id"
-                (click)="deleteIssue(issue)">
-                {{ deletingIssueId === issue.id ? 'Eliminando...' : 'Eliminar' }}
-              </button>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
+  <div class="list-header">
+    <h2>Incidencias</h2>
+    <a class="btn btn-primary" routerLink="/issues/new">Nueva incidencia</a>
   </div>
+
+  <div class="filters">
+    <div class="field">
+      <label for="filter-status">Estado</label>
+      <select id="filter-status" name="filter-status" [(ngModel)]="status" (ngModelChange)="loadIssues()">
+        <option value="">Todos</option>
+        @for (issueStatus of statuses; track issueStatus) {
+          <option [value]="issueStatus">{{ issueStatus }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="filter-priority">Prioridad</label>
+      <select id="filter-priority" name="filter-priority" [(ngModel)]="priority" (ngModelChange)="loadIssues()">
+        <option value="">Todos</option>
+        @for (issuePriority of priorities; track issuePriority) {
+          <option [value]="issuePriority">{{ issuePriority }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (errorMessage) {
+    <p class="alert">{{ errorMessage }}</p>
+  }
+
+  @if (isLoading) {
+    <p class="muted">Cargando...</p>
+  } @else if (issues.length === 0) {
+    <p class="muted">No hay incidencias. Creá la primera.</p>
+  } @else {
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Estado</th>
+            <th>Prioridad</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (issue of issues; track issue.id) {
+            <tr>
+              <td>{{ issue.title }}</td>
+              <td>{{ issue.status }}</td>
+              <td>{{ issue.priority }}</td>
+              <td>{{ issue.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="actions">
+                <a class="btn btn-secondary" [routerLink]="['/issues', issue.id, 'edit']">Editar</a>
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  [disabled]="deletingIssueId === issue.id"
+                  (click)="deleteIssue(issue)">
+                  {{ deletingIssueId === issue.id ? 'Eliminando...' : 'Eliminar' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 }

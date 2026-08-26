@@ -1,10 +1,24 @@
 <header class="app-header">
   <div class="container app-header-content">
+    <div class="app-header-left">
+      <a class="user-logo-link" routerLink="/users/account" aria-label="Abrir cuenta">
+        <img src="/user-logo.png" alt="Cuenta de usuario" class="user-logo" />
+      </a>
+      @if (session.currentUser()) {
+        <nav class="app-nav" aria-label="Navegación principal">
+          <a routerLink="/issues" routerLinkActive="active">Incidencias</a>
+          <a routerLink="/users" routerLinkActive="active">Usuarios</a>
+        </nav>
+      }
+    </div>
+
     <a routerLink="/issues" class="app-title">Mini Jira</a>
     <app-weather-card />
   </div>
 </header>
 
-<main class="container">
-  <router-outlet />
+<main class="app-main">
+  <div class="container app-main-content">
+    <router-outlet />
+  </div>
 </main>

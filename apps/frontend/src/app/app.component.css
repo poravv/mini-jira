@@ -2,20 +2,95 @@
   background: var(--color-primary);
   color: #fff;
   padding: 0.85rem 0;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
 .app-header-content {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem 1rem;
+  width: 100%;
+  max-width: none;
+  min-height: 2.6rem;
+  padding-left: clamp(1rem, 4vw, 4rem);
+  padding-right: clamp(1rem);
+  gap: 1rem;
+}
+
+.app-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.user-logo-link {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  overflow: hidden;
+  border: 2px solid #1f2933;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.user-logo {
+  width: 40px;
+  height: 31px;
+  object-fit: contain;
+  object-position: center;
 }
 
 .app-title {
+  grid-column: 2;
   color: #fff;
   font-size: 1.25rem;
   font-weight: 700;
   text-decoration: none;
+}
+.app-nav {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.app-nav a {
+  color: #dbeafe;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.app-nav a.active,
+.app-nav a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+app-weather-card {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.app-main {
+  min-height: calc(100vh - 4.3rem);
+  padding: 2rem 0 4rem;
+  background-color: var(--color-bg);
+  background-image:
+    linear-gradient(rgba(245, 246, 248, 0.526), rgba(245, 246, 248, 0.575)),
+    url('/sky-background.png');
+  background-position: center 28%;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+.app-main-content {
+  min-height: calc(100vh - 10.3rem);
+}
+
+@media (max-width: 700px) {
+  .app-header-content { gap: 0.5rem; }
+  .app-nav { gap: 0.45rem; }
+  .app-nav a { font-size: 0.8rem; }
+  .app-title { font-size: 1.1rem; }
+  app-weather-card { display: none; }
 }
