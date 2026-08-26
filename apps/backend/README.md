@@ -50,15 +50,24 @@ docker run -p 8080:8080 -e DB_HOST=host.docker.internal mini-jira-backend
 | `GET` | `/api/issues` | Listar issues; acepta `status` y `priority` (opcionales) y devuelve las mas urgentes primero |
 | `GET` | `/api/issues/{id}` | Obtener un issue (404 si no existe) |
 | `POST` | `/api/issues` | Crear issue (201; 400 con errores por campo si falla validación) |
-| `GET` | `/api/weather` | Clima actual de Asunción vía [Open-Meteo](https://open-meteo.com) (503 si el proveedor falla o tarda más de 3s) |
-
-**A propósito no existen `PUT` ni `DELETE`**: editar y eliminar incidencias son tareas pendientes del equipo (ver backlog en el README raíz y `docs/CHECKLIST.md`).
+| `PUT` | `/api/issues/{id}` | Editar un issue (200; 404 si no existe; 400 si falla validación) |
+| `DELETE` | `/api/issues/{id}` | Eliminar un issue (204; 404 si no existe) |
+| `GET` | `/api/weather` | Clima actual de Asunción vía [Open-Meteo](https://open-meteo.com) (200; 503 si el proveedor falla o tarda más de 3s) |
 
 Modelo `Issue`: `title` (requerido, máx. 150), `description` (opcional), `status` (`PENDIENTE` | `EN_PROGRESO` | `RESUELTA` | `CERRADA`, default `PENDIENTE`), `priority` (`BAJA` | `MEDIA` | `ALTA` | `CRITICA`, default `MEDIA`), `createdAt` / `updatedAt` automáticos.
 
-Respuesta de `/api/weather`: `{ "city": "Asunción", "temperature": 24.1, "humidity": 60, "weatherCode": 3, "windSpeed": 12.3 }`. La URL del proveedor se configura en `weather.open-meteo.url` y los timeouts en `spring.http.client.*` (`application.yml`).
-
 No hay configuración de CORS: el frontend siempre llama a `/api` con rutas relativas a través de un proxy (el dev server de Angular en desarrollo, nginx en Docker), así que el navegador nunca hace una petición cross-origin.
+
+## Módulo weather
+
+`GET /api/weather` es un proxy hacia Open-Meteo: el backend consulta el proveedor externo y devuelve un contrato propio, `{ "city": "Asunción", "temperature": 24.1, "humidity": 60, "weatherCode": 3, "windSpeed": 12.3 }` (503 si Open-Meteo no responde o responde incompleto).
+
+Configuración en `application.yml`:
+
+- `weather.open-meteo.url`: URL base del proveedor (`https://api.open-meteo.com/v1/forecast`).
+- `spring.http.client.connect-timeout` / `read-timeout`: 3s cada uno — un proveedor lento no debe colgar la API.
+
+Explicación completa capa por capa, cómo probarlo y cómo replicar el patrón para otro servicio externo: [`docs/RESTCLIENT-PROXY.md`](../../docs/RESTCLIENT-PROXY.md).
 
 ## Migraciones con Liquibase
 
@@ -68,9 +77,11 @@ El esquema lo maneja Liquibase (Hibernate solo valida: `ddl-auto: validate`). Al
 src/main/resources/db/changelog/db.changelog-master.yaml
 ```
 
+Changesets existentes: `001-create-issues-table` (tabla `issues`) y `002-create-usuario-table` (tabla `usuario` — solo esquema, todavía sin código Java asociado; ver `docs/CHECKLIST.md`).
+
 ### Agregar un changeset
 
-1. Crear un archivo nuevo en `src/main/resources/db/changelog/`, por ejemplo `002-add-assignee-to-issues.yaml`, con un `changeSet` de `id` único y `author`.
+1. Crear un archivo nuevo en `src/main/resources/db/changelog/`, por ejemplo `003-create-proyecto-tables.yaml`, con un `changeSet` de `id` único y `author`.
 2. Incluirlo al final del master:
 
 ```yaml
@@ -78,7 +89,9 @@ databaseChangeLog:
   - include:
       file: db/changelog/001-create-issues-table.yaml
   - include:
-      file: db/changelog/002-add-assignee-to-issues.yaml
+      file: db/changelog/002-create-usuario-table.yaml
+  - include:
+      file: db/changelog/003-create-proyecto-tables.yaml
 ```
 
 3. Arrancar la app: Liquibase aplica el changeset y lo registra en la tabla `databasechangelog`.

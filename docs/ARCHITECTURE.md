@@ -8,6 +8,7 @@ Adaptado del [documento de definición](definicion-proyecto-colaborativo-dev-jr.
 flowchart TD
     FE[Frontend Angular<br/>nginx :4200] -->|/api| API[API Spring Boot :8080]
     API --> INC[Incidencias ✔]
+    API --> WE[Weather ✔]
     API -.-> US[Usuarios y autenticación]
     API -.-> PR[Proyectos]
     API -.-> CO[Comentarios]
@@ -17,6 +18,7 @@ flowchart TD
     PR -.-> PG
     CO -.-> PG
     AU -.-> MG[(MongoDB)]
+    WE --> OM[(Open-Meteo)]
 ```
 
 ## Decisión: monolito modular
@@ -38,15 +40,19 @@ com.minijira.<modulo>/
 
 Reglas: el flujo es siempre controller → service → repository; los módulos no se importan entre sí sin acuerdo previo; la API expone DTOs, nunca entidades. El esquema de PostgreSQL se versiona únicamente con changesets de Liquibase, que corren al arrancar el backend.
 
+`com.minijira.weather` es el ejemplo de módulo sin base de datos: mantiene la misma separación controller → service → repository, pero el `repository` llama a una API externa (Open-Meteo) por HTTP en vez de a PostgreSQL. Ver [`docs/RESTCLIENT-PROXY.md`](RESTCLIENT-PROXY.md).
+
 ## Construido vs. pendiente
 
 | Componente | Estado |
 | --- | --- |
 | Infraestructura (Docker Compose, Postgres, Mongo) | ✔ Construido |
-| Módulo incidencias: crear, listar, consultar y eliminar en `/api/issues` + Swagger + Liquibase | ✔ Construido |
-| Frontend Angular con listado y alta de incidencias | ✔ Construido |
-| Editar incidencia (PUT + formulario de edición) | Implementado |
-| Eliminar incidencia (`DELETE /api/issues/{id}`) | ✔ Backend construido; botón del frontend pendiente |
+| Módulo incidencias: crear, listar (con filtros), consultar, editar y eliminar en `/api/issues` + Swagger + Liquibase | ✔ Construido |
+| Frontend Angular con listado, alta, edición y eliminación de incidencias | ✔ Construido |
+| Eliminar incidencia | ✔ Construido (backend + botón en listado) |
+| Módulo weather: proxy Open-Meteo con RestClient | ✔ Construido (ver RESTCLIENT-PROXY.md) |
+| Tabla `usuario` (Liquibase 002) | Parcial: solo esquema, sin código Java |
+| Cambios de estado/prioridad con reglas | Parcial: campos editables por PUT; faltan reglas de transición |
 | Autenticación JWT, usuarios y roles | Pendiente (junior) |
 | Proyectos | Pendiente (junior) |
 | Comentarios | Pendiente (junior) |
