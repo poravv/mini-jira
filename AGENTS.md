@@ -37,6 +37,6 @@ Mini-Jira: plataforma de gestión de incidencias con fines formativos para desar
 
 ## Recursos
 
-- Skills de trabajo en `.claude/skills/`: `backend-feature`, `frontend-feature`, `pr-ready`.
+- Skills de trabajo para Codex en `.agents/skills/` y para Claude en `.claude/skills/`: `backend-feature`, `frontend-feature`, `pr-ready`.
 - Documentación en `docs/`.
 - Reglas de colaboración en `CONTRIBUTING.md`.
