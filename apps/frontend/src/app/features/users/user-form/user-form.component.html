@@ -1,0 +1,56 @@
+<h2>{{ isEditing ? 'Editar usuario' : 'Nuevo usuario' }}</h2>
+
+@if (errorMessage) {
+  <p class="alert">{{ errorMessage }}</p>
+}
+
+@if (isLoading) {
+  <p class="muted">Cargando usuario...</p>
+} @else {
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <div class="field-row">
+      <div class="field">
+        <label for="username">Usuario *</label>
+        <input id="username" type="text" formControlName="username" maxlength="50" autocomplete="username" />
+        @if (form.controls.username.touched && form.controls.username.errors?.['required']) { <p class="field-error">El usuario es obligatorio.</p> }
+      </div>
+      <div class="field">
+        <label for="email">Email *</label>
+        <input id="email" type="email" formControlName="email" maxlength="254" autocomplete="email" />
+        @if (form.controls.email.touched && form.controls.email.errors?.['email']) { <p class="field-error">Ingresá un email válido.</p> }
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="firstName">Nombre *</label>
+        <input id="firstName" type="text" formControlName="firstName" maxlength="100" autocomplete="given-name" />
+      </div>
+      <div class="field">
+        <label for="lastName">Apellido *</label>
+        <input id="lastName" type="text" formControlName="lastName" maxlength="100" autocomplete="family-name" />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="password">Contraseña {{ isEditing ? '(opcional)' : '*' }}</label>
+        <input id="password" type="password" formControlName="password" minlength="8" maxlength="72" autocomplete="new-password" />
+        @if (form.controls.password.touched && form.controls.password.errors?.['minlength']) { <p class="field-error">Debe tener al menos 8 caracteres.</p> }
+      </div>
+      @if (!isAccountCreation) {
+        <div class="field">
+          <label for="role">Rol</label>
+          <select id="role" formControlName="role">
+            @for (role of roles; track role) { <option [value]="role">{{ role }}</option> }
+          </select>
+        </div>
+      }
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="isSaving">{{ isSaving ? 'Guardando...' : 'Guardar' }}</button>
+      <a class="btn btn-secondary" routerLink="/users">Cancelar</a>
+    </div>
+  </form>
+}

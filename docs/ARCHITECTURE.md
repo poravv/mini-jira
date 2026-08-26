@@ -8,7 +8,7 @@ Adaptado del [documento de definición](definicion-proyecto-colaborativo-dev-jr.
 flowchart TD
     FE[Frontend Angular<br/>nginx :4200] -->|/api| API[API Spring Boot :8080]
     API --> INC[Incidencias ✔]
-    API -.-> US[Usuarios y autenticación]
+    API --> US[Usuarios ✔ / autenticación pendiente]
     API -.-> PR[Proyectos]
     API -.-> CO[Comentarios]
     API -.-> AU[Auditoría y logs]
@@ -47,7 +47,8 @@ Reglas: el flujo es siempre controller → service → repository; los módulos 
 | Frontend Angular con listado y alta de incidencias | ✔ Construido |
 | Editar incidencia (PUT + formulario de edición) | Implementado |
 | Eliminar incidencia (`DELETE /api/issues/{id}`) | ✔ Backend construido; botón del frontend pendiente |
-| Autenticación JWT, usuarios y roles | Pendiente (junior) |
+| Gestión de usuarios y roles en `/api/users` | ✔ Construido |
+| Autenticación JWT | Pendiente (junior) |
 | Proyectos | Pendiente (junior) |
 | Comentarios | Pendiente (junior) |
 | Auditoría e historial en MongoDB | Pendiente (junior) — Mongo ya está en compose, sin uso |

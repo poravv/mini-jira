@@ -1,0 +1,44 @@
+@if (session.currentUser(); as currentUser) {
+  <section class="account-card">
+    <p class="eyebrow">Cuenta activa</p>
+    <h2>{{ currentUser.firstName }} {{ currentUser.lastName }}</h2>
+    <p class="muted">{{ currentUser.email }}</p>
+    <div class="account-actions">
+      <a class="btn btn-primary" routerLink="/issues">Ir a incidencias</a>
+      <button class="btn btn-secondary" type="button" (click)="logout()">Cerrar sesión</button>
+    </div>
+  </section>
+} @else {
+  <section class="account-card">
+    <img src="/user-logo.png" alt="Logo de usuario" class="account-logo" />
+    <h2>Ingresar a tu cuenta</h2>
+    <p class="muted">Ingresá con tu correo o usuario y tu contraseña.</p>
+
+    @if (errorMessage) {
+      <p class="alert" role="alert">{{ errorMessage }}</p>
+    }
+
+    <form class="login-form" (ngSubmit)="login()" novalidate>
+      <div class="field">
+        <label for="identifier">Correo o usuario</label>
+        <input id="identifier" name="identifier" type="text" [(ngModel)]="identifier"
+               autocomplete="username" required />
+      </div>
+
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <input id="password" name="password" type="password" [(ngModel)]="password"
+               autocomplete="current-password" required />
+      </div>
+
+      <button class="btn btn-primary" type="submit" [disabled]="isLoggingIn">
+        {{ isLoggingIn ? 'Ingresando...' : 'Ingresar' }}
+      </button>
+    </form>
+
+    <div class="create-account">
+      <span>¿No tenés una cuenta?</span>
+      <a class="btn btn-primary" routerLink="/users/account/new">Crear cuenta</a>
+    </div>
+  </section>
+}

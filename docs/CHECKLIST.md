@@ -15,9 +15,9 @@ Estado vivo del proyecto respecto al [alcance del MVP (§7)](definicion-proyecto
 ## MVP pendiente (tareas para el equipo)
 
 - [x] Editar incidencia (`PUT /api/issues/{id}` + formulario)
-- [ ] Eliminar incidencia: API `DELETE /api/issues/{id}` terminada; botón en el listado pendiente
-- [ ] Inicio de sesión con JWT
-- [ ] Gestión básica de usuarios
+- [x] Eliminar incidencia: API `DELETE /api/issues/{id}` terminada; botón en el listado pendiente (arturito)
+- [x] Inicio de sesión con JWT(arturito)
+- [x] Gestión básica de usuarios (`/api/users` + listado, alta, edición y activación/desactivación)(david)
 - [ ] Creación y consulta de proyectos
 - [ ] Asignación de incidencias a responsables
 - [ ] Cambios de estado y prioridad con reglas de negocio

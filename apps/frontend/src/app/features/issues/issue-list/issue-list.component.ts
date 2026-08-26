@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 
 import { ISSUE_PRIORITIES, ISSUE_STATUSES, Issue, IssuePriority, IssueStatus } from '../issue.model';
 import { IssueService } from '../issue.service';
+import { UserSessionService } from '../../users/user-session.service';
 
 /** Pantalla de listado (/issues): pide las incidencias a IssueService y muestra tabla, carga o error. */
 @Component({
@@ -15,6 +16,7 @@ import { IssueService } from '../issue.service';
 })
 export class IssueListComponent implements OnInit {
   private readonly issueService = inject(IssueService);
+  readonly session = inject(UserSessionService);
 
   readonly statuses = ISSUE_STATUSES;
   readonly priorities = ISSUE_PRIORITIES;
@@ -27,6 +29,10 @@ export class IssueListComponent implements OnInit {
   priority: IssuePriority | '' = '';
 
   ngOnInit(): void {
+    if (!this.session.currentUser()) {
+      this.isLoading = false;
+      return;
+    }
     this.loadIssues();
   }
 
