@@ -66,6 +66,9 @@ curl "http://localhost:8080/api/issues?status=PENDIENTE&priority=ALTA"
 
 # Consultar una incidencia
 curl http://localhost:8080/api/issues/1
+
+# Clima actual de Asunción (proxy de Open-Meteo)
+curl http://localhost:8080/api/weather
 ```
 
 El contrato exacto de los campos está en Swagger. Las incidencias se pueden editar con `PUT /api/issues/{id}` y eliminar con `DELETE /api/issues/{id}`.
@@ -113,19 +116,19 @@ Paso a paso con diagramas (crear rama → commit → push → PR → merge a `de
 
 ## Backlog para juniors
 
-El estado vivo del proyecto se sigue en [`docs/CHECKLIST.md`](docs/CHECKLIST.md) (se actualiza en cada PR). Las primeras tareas sugeridas son completar el CRUD de incidencias:
+El CRUD de incidencias ya está completo (crear, listar con filtros, consultar, editar y eliminar). El estado vivo del proyecto y el detalle de cada tarea pendiente del MVP (objetivo, endpoints, changesets, pruebas mínimas, rama sugerida) se siguen en [`docs/CHECKLIST.md`](docs/CHECKLIST.md) — es la fuente de verdad del avance y se actualiza en cada PR.
 
-2. **Eliminar incidencia**: implementar `DELETE /api/issues/{id}` + botón en el listado (rama sugerida: `feature/eliminar-incidencia`).
-
-Cada módulo pendiente es una funcionalidad vertical (pantalla + API + BD + pruebas). Detalle en la sección 6 del [documento de definición](docs/definicion-proyecto-colaborativo-dev-jr.md).
+Cada módulo pendiente es una funcionalidad vertical (pantalla + API + BD + pruebas). Detalle funcional en la sección 6 del [documento de definición](docs/definicion-proyecto-colaborativo-dev-jr.md); orden de ejecución sugerido y tareas concretas en `docs/CHECKLIST.md`.
 
 | Módulo | Descripción | Doc |
 | --- | --- | --- |
+| Usuarios | Registro, perfil, activación/desactivación (tabla `usuario` ya existe) | §6.1 |
 | Autenticación JWT | Login seguro, roles, control de acceso | §6.1 |
-| Usuarios | Registro, perfil, activación/desactivación | §6.1 |
 | Proyectos | CRUD de proyectos y sus miembros | §6.2 |
+| Reglas de estado/prioridad | Transiciones válidas (hoy editable libremente por PUT) | §6.3 |
 | Comentarios | Comentarios en incidencias, permisos de autor | §6.4 |
 | Auditoría (Mongo) | Historial de cambios de las incidencias | §6.5 |
+| Logs estructurados | Logs JSON, correlación de requests, errores en Mongo | §6.6 |
 | Dashboard | Métricas por estado, prioridad y actividad | §6.7 |
 
 ## Troubleshooting
@@ -142,6 +145,7 @@ Cada módulo pendiente es una funcionalidad vertical (pantalla + API + BD + prue
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Arquitectura: monolito modular, estructura de módulos, construido vs. pendiente |
 | [`docs/GIT-FLOW.md`](docs/GIT-FLOW.md) | Flujo Git paso a paso con diagramas: rama, commit, push, Pull Request y merge a `develop` |
 | [`docs/CHECKLIST.md`](docs/CHECKLIST.md) | Checklist vivo de avance del MVP (se actualiza en cada PR) |
+| [`docs/RESTCLIENT-PROXY.md`](docs/RESTCLIENT-PROXY.md) | Cómo consumir un servicio externo con `RestClient` (patrón proxy), con el módulo weather como ejemplo |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Reglas de colaboración: ramas, commits, PRs y code review |
 | [`AGENTS.md`](AGENTS.md) | Guía para asistentes IA (Claude Code / Codex): contexto y convenciones |
 | [`apps/backend/README.md`](apps/backend/README.md) | Backend: cómo correrlo, endpoints, variables de entorno, Liquibase |
