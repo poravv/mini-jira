@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/001-create-issues-table.yaml
   - include:
       file: db/changelog/002-create-usuario-table.yaml
+  - include:
+      file: db/changelog/003-insert-admin-user.yaml
