@@ -2,7 +2,7 @@
 
 REST API del issue tracker **mini-jira** (proyecto de práctica). Spring Boot 3.4 + Java 21 + PostgreSQL + Liquibase.
 
-Monolito modular: paquete base `com.minijira`, módulo `issue` (controller / service / repository / entity / dto / mapper / exception), módulo `weather` (proxy de Open-Meteo, sin base de datos) y paquete `common` (manejo global de errores).
+Monolito modular: paquete base `com.minijira`, módulo `issue` (controller / service / repository / entity / dto / mapper / exception), módulo `user` (misma estructura; usuarios y roles `ADMIN`/`SUPPORT`/`USER`, tabla `usuario`), módulo `weather` (proxy de Open-Meteo, sin base de datos) y paquete `common` (manejo global de errores).
 
 ## Requisitos
 
@@ -52,9 +52,17 @@ docker run -p 8080:8080 -e DB_HOST=host.docker.internal mini-jira-backend
 | `POST` | `/api/issues` | Crear issue (201; 400 con errores por campo si falla validación) |
 | `PUT` | `/api/issues/{id}` | Editar un issue (200; 404 si no existe; 400 si falla validación) |
 | `DELETE` | `/api/issues/{id}` | Eliminar un issue (204; 404 si no existe) |
+| `GET` | `/api/users` | Listar usuarios; filtro opcional `active` |
+| `GET` | `/api/users/{id}` | Obtener un usuario (404 si no existe) |
+| `POST` | `/api/users` | Crear usuario (201; password hasheado con BCrypt; 400 si falla validación) |
+| `PUT` | `/api/users/{id}` | Editar un usuario (200; 404 si no existe) |
+| `PATCH` | `/api/users/{id}/status` | Activar/desactivar con body `{"isActive": true}` (200; 404 si no existe) |
+| `POST` | `/api/users/login` | **Provisorio**: valida credenciales y devuelve `UserResponse` sin token (200; 401 si falla). Se mueve a `POST /api/auth/login` con JWT (tarea 1 de `docs/CHECKLIST.md`) |
 | `GET` | `/api/weather` | Clima actual de Asunción vía [Open-Meteo](https://open-meteo.com) (200; 503 si el proveedor falla o tarda más de 3s) |
 
 Modelo `Issue`: `title` (requerido, máx. 150), `description` (opcional), `status` (`PENDIENTE` | `EN_PROGRESO` | `RESUELTA` | `CERRADA`, default `PENDIENTE`), `priority` (`BAJA` | `MEDIA` | `ALTA` | `CRITICA`, default `MEDIA`), `createdAt` / `updatedAt` automáticos.
+
+Las respuestas de `/api/users` nunca incluyen `passwordHash`. No hay `spring-boot-starter-security` ni JWT (solo `spring-security-crypto` para BCrypt): todos los endpoints están abiertos. Usuario por defecto **solo para desarrollo**: `admin` / `admin123` (changeset `003`).
 
 No hay configuración de CORS: el frontend siempre llama a `/api` con rutas relativas a través de un proxy (el dev server de Angular en desarrollo, nginx en Docker), así que el navegador nunca hace una petición cross-origin.
 
@@ -77,11 +85,11 @@ El esquema lo maneja Liquibase (Hibernate solo valida: `ddl-auto: validate`). Al
 src/main/resources/db/changelog/db.changelog-master.yaml
 ```
 
-Changesets existentes: `001-create-issues-table` (tabla `issues`) y `002-create-usuario-table` (tabla `usuario` — solo esquema, todavía sin código Java asociado; ver `docs/CHECKLIST.md`).
+Changesets existentes: `001-create-issues-table` (tabla `issues`), `002-create-usuario-table` (tabla `usuario`) y `003-insert-admin-user` (usuario `admin`/`admin123`, solo dev). El siguiente libre es `004`.
 
 ### Agregar un changeset
 
-1. Crear un archivo nuevo en `src/main/resources/db/changelog/`, por ejemplo `003-create-proyecto-tables.yaml`, con un `changeSet` de `id` único y `author`.
+1. Crear un archivo nuevo en `src/main/resources/db/changelog/`, por ejemplo `004-create-proyecto-tables.yaml`, con un `changeSet` de `id` único y `author`.
 2. Incluirlo al final del master:
 
 ```yaml
@@ -91,7 +99,9 @@ databaseChangeLog:
   - include:
       file: db/changelog/002-create-usuario-table.yaml
   - include:
-      file: db/changelog/003-create-proyecto-tables.yaml
+      file: db/changelog/003-insert-admin-user.yaml
+  - include:
+      file: db/changelog/004-create-proyecto-tables.yaml
 ```
 
 3. Arrancar la app: Liquibase aplica el changeset y lo registra en la tabla `databasechangelog`.

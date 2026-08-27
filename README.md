@@ -23,7 +23,8 @@ mini-jira/
 │   ├── backend/          # API Spring Boot (puerto 8080)
 │   └── frontend/         # SPA Angular (puerto 4200)
 ├── docs/                 # Definición del proyecto y arquitectura
-├── .claude/skills/       # Skills para agentes de IA
+├── .claude/skills/       # Skills para agentes de IA (Claude)
+├── .agents/skills/       # Skills para agentes de IA (Codex), copia idéntica
 ├── docker-compose.yml    # Postgres + Mongo + backend + frontend
 ├── .env.example          # Variables de entorno de ejemplo
 ├── AGENTS.md             # Contexto para agentes de IA (Claude Code / Codex)
@@ -116,14 +117,13 @@ Paso a paso con diagramas (crear rama → commit → push → PR → merge a `de
 
 ## Backlog para juniors
 
-El CRUD de incidencias ya está completo (crear, listar con filtros, consultar, editar y eliminar). El estado vivo del proyecto y el detalle de cada tarea pendiente del MVP (objetivo, endpoints, changesets, pruebas mínimas, rama sugerida) se siguen en [`docs/CHECKLIST.md`](docs/CHECKLIST.md) — es la fuente de verdad del avance y se actualiza en cada PR.
+El CRUD de incidencias y la gestión de usuarios (`/api/users`, con un login provisorio sin JWT) ya están completos. El estado vivo del proyecto y el detalle de cada tarea pendiente del MVP (objetivo, endpoints, changesets, pruebas mínimas, rama sugerida) se siguen en [`docs/CHECKLIST.md`](docs/CHECKLIST.md) — es la fuente de verdad del avance y se actualiza en cada PR.
 
 Cada módulo pendiente es una funcionalidad vertical (pantalla + API + BD + pruebas). Detalle funcional en la sección 6 del [documento de definición](docs/definicion-proyecto-colaborativo-dev-jr.md); orden de ejecución sugerido y tareas concretas en `docs/CHECKLIST.md`.
 
 | Módulo | Descripción | Doc |
 | --- | --- | --- |
-| Usuarios | Registro, perfil, activación/desactivación (tabla `usuario` ya existe) | §6.1 |
-| Autenticación JWT | Login seguro, roles, control de acceso | §6.1 |
+| Autenticación JWT | Mover el login provisorio del módulo `user` al módulo `auth` + JWT, guard e interceptor (tarea 1 del CHECKLIST) | §6.1 |
 | Proyectos | CRUD de proyectos y sus miembros | §6.2 |
 | Reglas de estado/prioridad | Transiciones válidas (hoy editable libremente por PUT) | §6.3 |
 | Comentarios | Comentarios en incidencias, permisos de autor | §6.4 |
