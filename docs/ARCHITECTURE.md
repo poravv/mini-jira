@@ -9,12 +9,14 @@ flowchart TD
     FE[Frontend Angular<br/>nginx :4200] -->|/api| API[API Spring Boot :8080]
     API --> INC[Incidencias ✔]
     API --> WE[Weather ✔]
-    API -.-> US[Usuarios y autenticación]
+    API --> US[Usuarios ✔]
+    API -.-> AUTH[Autenticación JWT]
     API -.-> PR[Proyectos]
     API -.-> CO[Comentarios]
     API -.-> AU[Auditoría y logs]
     INC --> PG[(PostgreSQL)]
-    US -.-> PG
+    US --> PG
+    AUTH -.-> US
     PR -.-> PG
     CO -.-> PG
     AU -.-> MG[(MongoDB)]
@@ -40,6 +42,8 @@ com.minijira.<modulo>/
 
 Reglas: el flujo es siempre controller → service → repository; los módulos no se importan entre sí sin acuerdo previo; la API expone DTOs, nunca entidades. El esquema de PostgreSQL se versiona únicamente con changesets de Liquibase, que corren al arrancar el backend.
 
+Módulos existentes: `issue`, `user`, `weather` y el paquete transversal `common`. Un módulo nunca accede al `repository` de otro: se comunica a través de su `Service`.
+
 `com.minijira.weather` es el ejemplo de módulo sin base de datos: mantiene la misma separación controller → service → repository, pero el `repository` llama a una API externa (Open-Meteo) por HTTP en vez de a PostgreSQL. Ver [`docs/RESTCLIENT-PROXY.md`](RESTCLIENT-PROXY.md).
 
 ## Construido vs. pendiente
@@ -51,9 +55,9 @@ Reglas: el flujo es siempre controller → service → repository; los módulos 
 | Frontend Angular con listado, alta, edición y eliminación de incidencias | ✔ Construido |
 | Eliminar incidencia | ✔ Construido (backend + botón en listado) |
 | Módulo weather: proxy Open-Meteo con RestClient | ✔ Construido (ver RESTCLIENT-PROXY.md) |
-| Tabla `usuario` (Liquibase 002) | Parcial: solo esquema, sin código Java |
 | Cambios de estado/prioridad con reglas | Parcial: campos editables por PUT; faltan reglas de transición |
-| Autenticación JWT, usuarios y roles | Pendiente (junior) |
+| Módulo `user`: usuarios y roles en `/api/users` + Liquibase 002/003 + feature Angular `users` | ✔ Construido |
+| Autenticación JWT | Pendiente (junior) — login provisorio sin token en el módulo `user` (`POST /api/users/login`), se mueve al módulo `auth` (tarea 1 del CHECKLIST) |
 | Proyectos | Pendiente (junior) |
 | Comentarios | Pendiente (junior) |
 | Auditoría e historial en MongoDB | Pendiente (junior) — Mongo ya está en compose, sin uso |
