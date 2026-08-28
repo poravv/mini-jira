@@ -57,7 +57,7 @@ Módulos existentes: `issue`, `user`, `weather` y el paquete transversal `common
 | Módulo weather: proxy Open-Meteo con RestClient | ✔ Construido (ver RESTCLIENT-PROXY.md) |
 | Cambios de estado/prioridad con reglas | Parcial: campos editables por PUT; faltan reglas de transición |
 | Módulo `user`: usuarios y roles en `/api/users` + Liquibase 002/003 + feature Angular `users` | ✔ Construido |
-| Autenticación JWT | Pendiente (junior) — login provisorio sin token en el módulo `user` (`POST /api/users/login`), se mueve al módulo `auth` (tarea 1 del CHECKLIST) |
+| Autenticación JWT | ✔ Construido — módulo `auth`, `POST /api/auth/login`, filtro stateless y control de roles |
 | Proyectos | Pendiente (junior) |
 | Comentarios | Pendiente (junior) |
 | Auditoría e historial en MongoDB | Pendiente (junior) — Mongo ya está en compose, sin uso |

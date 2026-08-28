@@ -31,8 +31,3 @@ export interface UserUpdateInput {
   role: UserRole;
   password?: string;
 }
-
-export interface UserLoginInput {
-  identifier: string;
-  password: string;
-}
