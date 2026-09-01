@@ -1,13 +1,11 @@
 package com.minijira.user.service;
 
 import com.minijira.user.dto.UserCreateRequest;
-import com.minijira.user.dto.UserLoginRequest;
 import com.minijira.user.dto.UserStatusRequest;
 import com.minijira.user.dto.UserResponse;
 import com.minijira.user.entity.User;
 import com.minijira.user.entity.UserRole;
 import com.minijira.user.exception.UserConflictException;
-import com.minijira.user.exception.UserAuthenticationException;
 import com.minijira.user.exception.UserNotFoundException;
 import com.minijira.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -16,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -30,6 +29,9 @@ class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @org.mockito.Spy
+    private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @InjectMocks
     private UserService userService;
@@ -67,31 +69,6 @@ class UserServiceTest {
 
         assertEquals(false, response.isActive());
         verify(userRepository).save(user);
-    }
-
-    @Test
-    void should_authenticate_active_user_with_email_and_password() {
-        User user = new User();
-        user.setEmail("ana@example.com");
-        user.setUsername("ana");
-        user.setPasswordHash(new BCryptPasswordEncoder().encode("secreto123"));
-        user.setActive(true);
-        given(userRepository.findByIdentifier("ana@example.com")).willReturn(Optional.of(user));
-
-        UserResponse response = userService.login(new UserLoginRequest("ana@example.com", "secreto123"));
-
-        assertEquals("ana@example.com", response.email());
-    }
-
-    @Test
-    void should_reject_suspended_user_even_with_correct_password() {
-        User user = new User();
-        user.setPasswordHash(new BCryptPasswordEncoder().encode("secreto123"));
-        user.setActive(false);
-        given(userRepository.findByIdentifier("ana@example.com")).willReturn(Optional.of(user));
-
-        assertThrows(UserAuthenticationException.class, () -> userService.login(
-                new UserLoginRequest("ana@example.com", "secreto123")));
     }
 
     @Test

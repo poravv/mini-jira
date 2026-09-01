@@ -1,12 +1,14 @@
 @if (!session.currentUser()) {
   <section class="welcome-message">
     <p>¿Estás listo para trabajar?</p>
-    <a class="btn btn-primary" routerLink="/users/account">Ingresar o crear cuenta</a>
+    <a class="btn btn-primary" routerLink="/auth/login">Ingresar</a>
   </section>
 } @else {
   <div class="list-header">
     <h2>Incidencias</h2>
-    <a class="btn btn-primary" routerLink="/issues/new">Nueva incidencia</a>
+    @if (session.currentUser()?.role === 'ADMIN' || session.currentUser()?.role === 'SUPPORT') {
+      <a class="btn btn-primary" routerLink="/issues/new">Nueva incidencia</a>
+    }
   </div>
 
   <div class="filters">
@@ -59,14 +61,18 @@
               <td>{{ issue.priority }}</td>
               <td>{{ issue.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
               <td class="actions">
-                <a class="btn btn-secondary" [routerLink]="['/issues', issue.id, 'edit']">Editar</a>
-                <button
-                  type="button"
-                  class="btn btn-danger"
-                  [disabled]="deletingIssueId === issue.id"
-                  (click)="deleteIssue(issue)">
-                  {{ deletingIssueId === issue.id ? 'Eliminando...' : 'Eliminar' }}
-                </button>
+                @if (session.currentUser()?.role === 'ADMIN' || session.currentUser()?.role === 'SUPPORT') {
+                  <a class="btn btn-secondary" [routerLink]="['/issues', issue.id, 'edit']">Editar</a>
+                }
+                @if (session.currentUser()?.role === 'ADMIN') {
+                  <button
+                    type="button"
+                    class="btn btn-danger"
+                    [disabled]="deletingIssueId === issue.id"
+                    (click)="deleteIssue(issue)">
+                    {{ deletingIssueId === issue.id ? 'Eliminando...' : 'Eliminar' }}
+                  </button>
+                }
               </td>
             </tr>
           }

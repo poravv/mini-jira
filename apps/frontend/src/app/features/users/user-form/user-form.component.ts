@@ -4,7 +4,6 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { USER_ROLES, User, UserCreateInput, UserRole, UserUpdateInput } from '../user.model';
 import { UserService } from '../user.service';
-import { UserSessionService } from '../user-session.service';
 
 @Component({
   selector: 'app-user-form',
@@ -17,7 +16,6 @@ export class UserFormComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly session = inject(UserSessionService);
 
   readonly roles = USER_ROLES;
   errorMessage = '';
@@ -25,7 +23,6 @@ export class UserFormComponent implements OnInit {
   isLoading = false;
   isSaving = false;
   private userId: number | null = null;
-  isAccountCreation = false;
 
   readonly form = this.fb.group({
     username: ['', [Validators.required, Validators.maxLength(50)]],
@@ -37,28 +34,15 @@ export class UserFormComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.isAccountCreation = this.route.snapshot.data['isAccountCreation'] === true;
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam === null) {
-      if (!this.isAccountCreation && !this.session.currentUser()) {
-        this.router.navigate(['/users/account']);
-        return;
-      }
       this.form.controls.password.addValidators(Validators.required);
-      if (this.isAccountCreation) {
-        this.form.controls.role.setValue('USER');
-      }
       return;
     }
 
     const id = Number(idParam);
     if (!Number.isInteger(id) || id <= 0) {
       this.errorMessage = 'El usuario solicitado no es válido.';
-      return;
-    }
-
-    if (!this.session.currentUser()) {
-      this.router.navigate(['/users/account']);
       return;
     }
 
@@ -103,11 +87,6 @@ export class UserFormComponent implements OnInit {
   private saveObserver() {
     return {
       next: (user: User) => {
-        if (this.isAccountCreation) {
-          this.session.startSession(user);
-          this.router.navigate(['/issues']);
-          return;
-        }
         this.router.navigate(['/users']);
       },
       error: () => {

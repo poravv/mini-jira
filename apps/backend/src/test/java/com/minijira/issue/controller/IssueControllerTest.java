@@ -1,5 +1,6 @@
 package com.minijira.issue.controller;
 
+import com.minijira.auth.service.JwtService;
 import com.minijira.issue.dto.IssueResponse;
 import com.minijira.issue.entity.IssuePriority;
 import com.minijira.issue.entity.IssueStatus;
@@ -8,6 +9,7 @@ import com.minijira.issue.service.IssueService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(IssueController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class IssueControllerTest {
 
     @Autowired
@@ -34,11 +37,15 @@ class IssueControllerTest {
     @MockitoBean
     private IssueService issueService;
 
+    @MockitoBean
+    private JwtService jwtService;
+
     @Test
     void should_return_issues_when_listing() throws Exception {
         IssueResponse issue = new IssueResponse(1L, "Fix login", null,
                 IssueStatus.PENDIENTE, IssuePriority.MEDIA, Instant.now(), Instant.now());
-        given(issueService.findAll(null, null)).willReturn(List.of(issue));
+        given(issueService.findAll(org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.isNull()))
+                .willReturn(List.of(issue));
 
         mockMvc.perform(get("/api/issues"))
                 .andExpect(status().isOk())
@@ -49,24 +56,38 @@ class IssueControllerTest {
 
     @Test
     void should_pass_the_filters_to_the_service_when_listing() throws Exception {
-        given(issueService.findAll(IssueStatus.PENDIENTE, IssuePriority.ALTA)).willReturn(List.of());
+        given(issueService.findAll(org.mockito.ArgumentMatchers.eq(IssueStatus.PENDIENTE), org.mockito.ArgumentMatchers.eq(IssuePriority.ALTA)))
+                .willReturn(List.of());
 
         mockMvc.perform(get("/api/issues")
                         .param("status", "PENDIENTE")
                         .param("priority", "ALTA"))
                 .andExpect(status().isOk());
 
-        verify(issueService).findAll(IssueStatus.PENDIENTE, IssuePriority.ALTA);
+        verify(issueService).findAll(org.mockito.ArgumentMatchers.eq(IssueStatus.PENDIENTE), org.mockito.ArgumentMatchers.eq(IssuePriority.ALTA));
     }
 
     @Test
     void should_return_400_with_field_errors_when_title_is_blank() throws Exception {
         mockMvc.perform(post("/api/issues")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\": \"\"}"))
+                .content("{\"title\": \"\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Validation failed"))
                 .andExpect(jsonPath("$.fields.title").exists());
+    }
+
+    @Test
+    void should_create_an_issue_without_an_assigned_user() throws Exception {
+        IssueResponse createdIssue = new IssueResponse(1L, "Fix registration", null,
+                IssueStatus.PENDIENTE, IssuePriority.MEDIA, Instant.now(), Instant.now());
+        given(issueService.create(org.mockito.ArgumentMatchers.any())).willReturn(createdIssue);
+
+        mockMvc.perform(post("/api/issues")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Fix registration\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1));
     }
 
     @Test

@@ -33,6 +33,7 @@ services:
       DB_NAME: ${POSTGRES_DB:-minijira}
       DB_USER: ${POSTGRES_USER:-minijira}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-minijira}
+      JWT_SECRET: ${JWT_SECRET:?Definí JWT_SECRET (mínimo 32 caracteres) antes de iniciar Docker}
     depends_on:
       postgres:
         condition: service_healthy

@@ -51,15 +51,6 @@ describe('UserService', () => {
     request.flush(user);
   });
 
-  it('inicia sesión con correo y contraseña', () => {
-    service.login({ identifier: 'ana@example.com', password: 'secreto123' }).subscribe((result) => expect(result).toEqual(user));
-
-    const request = httpTesting.expectOne('/api/users/login');
-    expect(request.request.method).toBe('POST');
-    expect(request.request.body).toEqual({ identifier: 'ana@example.com', password: 'secreto123' });
-    request.flush(user);
-  });
-
   it('cambia el estado con PATCH', () => {
     service.updateStatus(7, false).subscribe((result) => expect(result).toEqual({ ...user, isActive: false }));
 

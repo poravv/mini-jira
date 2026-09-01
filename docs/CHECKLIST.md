@@ -13,7 +13,7 @@ Estado vivo del proyecto respecto al [alcance del MVP (§7)](definicion-proyecto
 - [x] Documentación inicial (README, CONTRIBUTING, ARCHITECTURE, plantilla de PR, skills de IA)
 - [x] Módulo weather: proxy de Open-Meteo con `RestClient` (backend) + tarjeta de clima en el header (frontend) — ver [`docs/RESTCLIENT-PROXY.md`](RESTCLIENT-PROXY.md)
 - [x] Gestión de usuarios: módulo `com.minijira.user` (entidad `User` → tabla `usuario`, roles `ADMIN`/`SUPPORT`/`USER`), endpoints `GET /api/users?active=`, `GET /api/users/{id}`, `POST /api/users` (201, BCrypt), `PUT /api/users/{id}`, `PATCH /api/users/{id}/status` (`{isActive}`); `UserResponse` nunca expone `passwordHash`; changesets `002-create-usuario-table` y `003-insert-admin-user` (admin/admin123, solo dev); feature Angular `users` (`/users`, `/users/new`, `/users/:id/edit`, `/users/account/new` registro) — `apps/backend/src/main/java/com/minijira/user/`, `apps/frontend/src/app/features/users/`
-- [~] Login básico **sin JWT** — `POST /api/users/login` (200 devuelve `UserResponse`, 401 si falla) + `AccountPageComponent` en `/users/account`; sesión en `localStorage` (`user-session.service.ts`), todos los endpoints siguen abiertos. **Ubicación provisoria**: se mueve al módulo `auth` en la tarea 1
+- [x] Autenticación JWT — `POST /api/auth/login`, filtro stateless, roles `ADMIN`/`SUPPORT`/`USER`, interceptor y guard Angular; `/api/users/login` eliminado.
 
 ## Tareas pendientes del MVP
 

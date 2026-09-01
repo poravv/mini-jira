@@ -1,7 +1,6 @@
 package com.minijira.user.controller;
 
 import com.minijira.user.dto.UserCreateRequest;
-import com.minijira.user.dto.UserLoginRequest;
 import com.minijira.user.dto.UserResponse;
 import com.minijira.user.dto.UserStatusRequest;
 import com.minijira.user.dto.UserUpdateRequest;
@@ -20,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -35,24 +35,21 @@ public class UserController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "List users", description = "Optionally filters users by active status.")
     public List<UserResponse> list(@RequestParam(required = false) Boolean active) {
         return userService.findAll(active);
     }
 
-    @PostMapping("/login")
-    @Operation(summary = "Authenticate a user", description = "Authenticates by username or email and password.")
-    public UserResponse login(@Valid @RequestBody UserLoginRequest request) {
-        return userService.login(request);
-    }
-
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get one user by id")
     public UserResponse get(@PathVariable Long id) {
         return userService.findById(id);
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Register a user")
     public UserResponse create(@Valid @RequestBody UserCreateRequest request) {
@@ -60,12 +57,14 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update a user's profile")
     public UserResponse update(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest request) {
         return userService.update(id, request);
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Activate or deactivate a user")
     public UserResponse updateStatus(@PathVariable Long id, @Valid @RequestBody UserStatusRequest request) {
         return userService.updateStatus(id, request);

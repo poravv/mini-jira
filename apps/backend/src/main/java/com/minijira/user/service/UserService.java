@@ -1,20 +1,17 @@
 package com.minijira.user.service;
 
 import com.minijira.user.dto.UserCreateRequest;
-import com.minijira.user.dto.UserLoginRequest;
 import com.minijira.user.dto.UserResponse;
 import com.minijira.user.dto.UserStatusRequest;
 import com.minijira.user.dto.UserUpdateRequest;
 import com.minijira.user.entity.User;
 import com.minijira.user.entity.UserRole;
 import com.minijira.user.exception.UserConflictException;
-import com.minijira.user.exception.UserAuthenticationException;
 import com.minijira.user.exception.UserNotFoundException;
 import com.minijira.user.mapper.UserMapper;
 import com.minijira.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,10 +26,11 @@ public class UserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(readOnly = true)
@@ -46,17 +44,25 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserResponse login(UserLoginRequest request) {
-        String identifier = normalize(request.identifier());
-        User user = userRepository.findByIdentifier(identifier)
-                .orElseThrow(UserAuthenticationException::new);
+    public UserAuthenticationData findAuthenticationData(String identifier) {
+        User user = userRepository.findByIdentifier(normalize(identifier)).orElse(null);
+        return user == null ? null : new UserAuthenticationData(user.getId(), user.getUsername(), user.getPasswordHash(),
+                user.isActive(), user.getRole());
+    }
 
-        if (!user.isActive() || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new UserAuthenticationException();
+    @Transactional(readOnly = true)
+    public UserAuthenticationData findActiveAuthenticationData(Long id) {
+        User user = userRepository.findById(id).filter(User::isActive).orElse(null);
+        return user == null ? null : new UserAuthenticationData(user.getId(), user.getUsername(), user.getPasswordHash(),
+                true, user.getRole());
+    }
+
+    @Transactional(readOnly = true)
+    public void ensureActiveUser(Long id) {
+        User user = getUser(id);
+        if (!user.isActive()) {
+            throw new IllegalArgumentException("Assigned user is inactive");
         }
-
-        log.info("User authenticated: id={}", user.getId());
-        return UserMapper.toResponse(user);
     }
 
     public UserResponse create(UserCreateRequest request) {
