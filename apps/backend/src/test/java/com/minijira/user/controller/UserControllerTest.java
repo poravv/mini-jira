@@ -1,6 +1,7 @@
 package com.minijira.user.controller;
 
 import com.minijira.user.dto.UserResponse;
+import com.minijira.user.dto.AuthResponse;
 import com.minijira.user.dto.UserLoginRequest;
 import com.minijira.user.dto.UserStatusRequest;
 import com.minijira.user.entity.UserRole;
@@ -9,6 +10,7 @@ import com.minijira.user.exception.UserNotFoundException;
 import com.minijira.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -26,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
 
     @Autowired
@@ -58,20 +61,21 @@ class UserControllerTest {
 
     @Test
     void should_authenticate_user_with_credentials() throws Exception {
-        given(userService.login(new UserLoginRequest("ana@example.com", "secreto123")))
-                .willReturn(user(1L, true));
+        given(userService.authenticate(new UserLoginRequest("ana@example.com", "secreto123")))
+                .willReturn(authResponse(1L, true));
 
         mockMvc.perform(post("/api/users/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"identifier\":\"ana@example.com\",\"password\":\"secreto123\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("ana@example.com"));
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.user.email").value("ana@example.com"));
     }
 
     @Test
     void should_return_401_for_invalid_credentials() throws Exception {
         willThrow(new UserAuthenticationException())
-                .given(userService).login(new UserLoginRequest("ana@example.com", "secreto123"));
+                .given(userService).authenticate(new UserLoginRequest("ana@example.com", "secreto123"));
 
         mockMvc.perform(post("/api/users/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -104,5 +108,9 @@ class UserControllerTest {
         Instant now = Instant.parse("2026-08-25T12:00:00Z");
         return new UserResponse(id, "ana", "ana@example.com", "Ana", "Admin", isActive,
                 UserRole.ADMIN, now, now);
+    }
+
+    private static AuthResponse authResponse(Long id, boolean isActive) {
+        return new AuthResponse("signed.jwt.token", "Bearer", 3600, user(id, isActive));
     }
 }

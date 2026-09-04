@@ -14,14 +14,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -30,6 +33,12 @@ class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private com.minijira.security.JwtTokenService jwtTokenService;
+
+    @Spy
+    private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @InjectMocks
     private UserService userService;
@@ -55,6 +64,19 @@ class UserServiceTest {
 
         assertThrows(UserConflictException.class, () -> userService.create(
                 new UserCreateRequest("Ana.Admin", "ana@example.com", "secreto123", "Ana", "Admin", UserRole.USER)));
+    }
+
+    @Test
+    void should_force_public_registration_to_the_user_role() {
+        UserCreateRequest request = new UserCreateRequest(
+                "ana", "ana@example.com", "secreto123", "Ana", "Admin", UserRole.ADMIN);
+        given(userRepository.existsByUsernameIgnoreCase("ana")).willReturn(false);
+        given(userRepository.existsByEmailIgnoreCase("ana@example.com")).willReturn(false);
+        given(userRepository.save(any(User.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        userService.create(request, false);
+
+        verify(userRepository).save(argThat(user -> user.getRole() == UserRole.USER));
     }
 
     @Test

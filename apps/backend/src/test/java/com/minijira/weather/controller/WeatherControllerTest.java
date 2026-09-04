@@ -5,6 +5,7 @@ import com.minijira.weather.repository.WeatherRepository;
 import com.minijira.weather.service.WeatherService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -19,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /** Prueba controller + service + handler global juntos; solo se mockea el acceso al proveedor externo. */
 @WebMvcTest(WeatherController.class)
 @Import(WeatherService.class)
+@AutoConfigureMockMvc(addFilters = false)
 class WeatherControllerTest {
 
     @Autowired

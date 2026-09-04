@@ -1,6 +1,6 @@
 # Mini Jira — Frontend
 
-SPA en Angular 19 (componentes standalone) para el tracker de incidencias. Consume la API REST del backend en `/api/issues`.
+SPA en Angular (componentes standalone) para el tracker de incidencias. El login obtiene un JWT desde `/api/auth/login`; el interceptor lo envía como `Authorization: Bearer ...` y el guard protege las rutas de incidencias.
 
 ## Desarrollo local
 

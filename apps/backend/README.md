@@ -2,7 +2,7 @@
 
 REST API del issue tracker **mini-jira** (proyecto de práctica). Spring Boot 3.4 + Java 21 + PostgreSQL + Liquibase.
 
-Monolito modular: paquete base `com.minijira`, módulo `issue` (controller / service / repository / entity / dto / mapper / exception), módulo `weather` (proxy de Open-Meteo, sin base de datos) y paquete `common` (manejo global de errores).
+Monolito modular: paquete base `com.minijira`, módulos `issue`, `user` y `auth`, módulo `weather` (proxy de Open-Meteo, sin base de datos) y paquete `common` (manejo global de errores).
 
 ## Requisitos
 
@@ -42,17 +42,23 @@ docker run -p 8080:8080 -e DB_HOST=host.docker.internal mini-jira-backend
 | `DB_NAME` | `minijira` | Nombre de la base |
 | `DB_USER` | `minijira` | Usuario de la base |
 | `DB_PASSWORD` | `minijira` | Password de la base |
+| `JWT_SECRET` | clave local de desarrollo | Clave Base64 (mínimo 32 bytes) para firmar JWT |
+| `JWT_ISSUER` | `mini-jira` | Emisor incluido en el token |
+| `JWT_EXPIRATION_SECONDS` | `3600` | Duración del token |
 
 ## Endpoints
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
+| `POST` | `/api/auth/login` | Autentica por usuario/email y devuelve `{ token, tokenType, expiresIn, user }` |
 | `GET` | `/api/issues` | Listar issues; acepta `status` y `priority` (opcionales) y devuelve las mas urgentes primero |
 | `GET` | `/api/issues/{id}` | Obtener un issue (404 si no existe) |
 | `POST` | `/api/issues` | Crear issue (201; 400 con errores por campo si falla validación) |
 | `PUT` | `/api/issues/{id}` | Editar un issue (200; 404 si no existe; 400 si falla validación) |
 | `DELETE` | `/api/issues/{id}` | Eliminar un issue (204; 404 si no existe) |
 | `GET` | `/api/weather` | Clima actual de Asunción vía [Open-Meteo](https://open-meteo.com) (200; 503 si el proveedor falla o tarda más de 3s) |
+
+El registro (`POST /api/users`) y el clima son públicos. El login también se mantiene disponible como `POST /api/users/login` por compatibilidad. Todas las operaciones de incidencias requieren `Authorization: Bearer <token>`. La consulta y administración de usuarios requieren además el rol `ADMIN` cuando corresponde.
 
 Modelo `Issue`: `title` (requerido, máx. 150), `description` (opcional), `status` (`PENDIENTE` | `EN_PROGRESO` | `RESUELTA` | `CERRADA`, default `PENDIENTE`), `priority` (`BAJA` | `MEDIA` | `ALTA` | `CRITICA`, default `MEDIA`), `createdAt` / `updatedAt` automáticos.
 
@@ -77,7 +83,7 @@ El esquema lo maneja Liquibase (Hibernate solo valida: `ddl-auto: validate`). Al
 src/main/resources/db/changelog/db.changelog-master.yaml
 ```
 
-Changesets existentes: `001-create-issues-table` (tabla `issues`) y `002-create-usuario-table` (tabla `usuario` — solo esquema, todavía sin código Java asociado; ver `docs/CHECKLIST.md`).
+Changesets existentes: `001-create-issues-table`, `002-create-usuario-table` y `003-insert-admin-user`.
 
 ### Agregar un changeset
 

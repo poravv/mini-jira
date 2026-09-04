@@ -6,6 +6,7 @@ import com.minijira.issue.entity.IssuePriority;
 import com.minijira.issue.entity.IssueStatus;
 import com.minijira.issue.service.IssueService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/issues")
 @Tag(name = "Issues", description = "Issue tracking CRUD")
+@SecurityRequirement(name = "bearerAuth")
 public class IssueController {
 
     private final IssueService issueService;

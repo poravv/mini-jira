@@ -1,6 +1,8 @@
 package com.minijira.user.service;
 
 import com.minijira.user.dto.UserCreateRequest;
+import com.minijira.security.JwtTokenService;
+import com.minijira.user.dto.AuthResponse;
 import com.minijira.user.dto.UserLoginRequest;
 import com.minijira.user.dto.UserResponse;
 import com.minijira.user.dto.UserStatusRequest;
@@ -14,7 +16,6 @@ import com.minijira.user.mapper.UserMapper;
 import com.minijira.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,10 +30,13 @@ public class UserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenService jwtTokenService;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenService jwtTokenService) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtTokenService = jwtTokenService;
     }
 
     @Transactional(readOnly = true)
@@ -47,6 +51,19 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserResponse login(UserLoginRequest request) {
+        return UserMapper.toResponse(authenticateUser(request));
+    }
+
+    public AuthResponse authenticate(UserLoginRequest request) {
+        User user = authenticateUser(request);
+        return new AuthResponse(
+                jwtTokenService.createToken(user),
+                "Bearer",
+                jwtTokenService.expirationSeconds(),
+                UserMapper.toResponse(user));
+    }
+
+    private User authenticateUser(UserLoginRequest request) {
         String identifier = normalize(request.identifier());
         User user = userRepository.findByIdentifier(identifier)
                 .orElseThrow(UserAuthenticationException::new);
@@ -56,10 +73,14 @@ public class UserService {
         }
 
         log.info("User authenticated: id={}", user.getId());
-        return UserMapper.toResponse(user);
+        return user;
     }
 
     public UserResponse create(UserCreateRequest request) {
+        return create(request, true);
+    }
+
+    public UserResponse create(UserCreateRequest request, boolean canAssignRole) {
         String username = normalize(request.username());
         String email = normalize(request.email());
         ensureUnique(username, email, null);
@@ -70,7 +91,7 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setFirstName(request.firstName().trim());
         user.setLastName(request.lastName().trim());
-        user.setRole(request.role() == null ? UserRole.USER : request.role());
+        user.setRole(canAssignRole && request.role() != null ? request.role() : UserRole.USER);
         User saved = userRepository.save(user);
         log.info("User created: id={} role={}", saved.getId(), saved.getRole());
         return UserMapper.toResponse(saved);

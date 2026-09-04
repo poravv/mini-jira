@@ -23,3 +23,10 @@ spring:
 weather:
   open-meteo:
     url: https://api.open-meteo.com/v1/forecast
+
+security:
+  jwt:
+    # Base64 de una clave de al menos 32 bytes. En despliegues reales, reemplazar por JWT_SECRET.
+    secret: ${JWT_SECRET:bWluaS1qaXJhLWRldi1qd3Qtc2VjcmV0LWtleS0zMi1ieXRlcyEhIQ==}
+    issuer: ${JWT_ISSUER:mini-jira}
+    expiration-seconds: ${JWT_EXPIRATION_SECONDS:3600}

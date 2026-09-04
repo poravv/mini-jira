@@ -7,7 +7,9 @@
       @if (session.currentUser()) {
         <nav class="app-nav" aria-label="Navegación principal">
           <a routerLink="/issues" routerLinkActive="active">Incidencias</a>
-          <a routerLink="/users" routerLinkActive="active">Usuarios</a>
+          @if (session.currentUser()?.role === 'ADMIN') {
+            <a routerLink="/users" routerLinkActive="active">Usuarios</a>
+          }
         </nav>
       }
     </div>

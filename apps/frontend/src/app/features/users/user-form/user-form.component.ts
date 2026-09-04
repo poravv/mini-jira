@@ -2,9 +2,10 @@ import { Component, OnInit, inject } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
-import { USER_ROLES, User, UserCreateInput, UserRole, UserUpdateInput } from '../user.model';
+import { USER_ROLES, UserCreateInput, UserRole, UserUpdateInput } from '../user.model';
 import { UserService } from '../user.service';
 import { UserSessionService } from '../user-session.service';
+import { switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-user-form',
@@ -96,24 +97,34 @@ export class UserFormComponent implements OnInit {
       this.userService.update(this.userId, input).subscribe(this.saveObserver());
     } else {
       const input: UserCreateInput = value;
-      this.userService.create(input).subscribe(this.saveObserver());
+      if (this.isAccountCreation) {
+        this.userService.create(input).pipe(
+          switchMap(() => this.userService.login({ identifier: input.username, password: input.password }))
+        ).subscribe({
+          next: (auth) => {
+            this.session.startSession(auth);
+            this.router.navigate(['/issues']);
+          },
+          error: () => this.handleSaveError()
+        });
+      } else {
+        this.userService.create(input).subscribe({
+          next: () => this.router.navigate(['/users']),
+          error: () => this.handleSaveError()
+        });
+      }
     }
   }
 
   private saveObserver() {
     return {
-      next: (user: User) => {
-        if (this.isAccountCreation) {
-          this.session.startSession(user);
-          this.router.navigate(['/issues']);
-          return;
-        }
-        this.router.navigate(['/users']);
-      },
-      error: () => {
-        this.errorMessage = 'No se pudo guardar el usuario. Verificá que el nombre y email no estén usados.';
-        this.isSaving = false;
-      }
+      next: () => this.router.navigate(['/users']),
+      error: () => this.handleSaveError()
     };
+  }
+
+  private handleSaveError(): void {
+    this.errorMessage = 'No se pudo guardar el usuario. Verificá que el nombre y email no estén usados.';
+    this.isSaving = false;
   }
 }

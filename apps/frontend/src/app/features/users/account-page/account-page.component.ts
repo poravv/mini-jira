@@ -30,8 +30,8 @@ export class AccountPageComponent {
     this.isLoggingIn = true;
     this.errorMessage = '';
     this.userService.login({ identifier: this.identifier.trim(), password: this.password }).subscribe({
-      next: (user) => {
-        this.session.startSession(user);
+      next: (auth) => {
+        this.session.startSession(auth);
         this.router.navigate(['/issues']);
       },
       error: () => {
