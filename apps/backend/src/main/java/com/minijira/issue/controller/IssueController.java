@@ -6,7 +6,6 @@ import com.minijira.issue.entity.IssuePriority;
 import com.minijira.issue.entity.IssueStatus;
 import com.minijira.issue.service.IssueService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -20,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -30,7 +30,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/issues")
 @Tag(name = "Issues", description = "Issue tracking CRUD")
-@SecurityRequirement(name = "bearerAuth")
 public class IssueController {
 
     private final IssueService issueService;
@@ -54,6 +53,7 @@ public class IssueController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create an issue")
     public IssueResponse create(@Valid @RequestBody IssueRequest request) {
@@ -61,12 +61,14 @@ public class IssueController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
     @Operation(summary = "Update an issue")
     public IssueResponse update(@PathVariable Long id, @Valid @RequestBody IssueRequest request) {
         return issueService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Delete an issue by id")
     public void delete(@PathVariable Long id) {

@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { AuthResponse, User, UserCreateInput, UserLoginInput, UserUpdateInput } from './user.model';
+import { User, UserCreateInput, UserUpdateInput } from './user.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -19,10 +19,6 @@ export class UserService {
 
   getById(id: number): Observable<User> {
     return this.http.get<User>(`${this.baseUrl}/${id}`);
-  }
-
-  login(input: UserLoginInput): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>('/api/auth/login', input);
   }
 
   create(input: UserCreateInput): Observable<User> {

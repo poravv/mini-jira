@@ -1,17 +1,15 @@
 package com.minijira.user.controller;
 
+import com.minijira.auth.service.JwtService;
 import com.minijira.user.dto.UserResponse;
-import com.minijira.user.dto.AuthResponse;
-import com.minijira.user.dto.UserLoginRequest;
 import com.minijira.user.dto.UserStatusRequest;
 import com.minijira.user.entity.UserRole;
-import com.minijira.user.exception.UserAuthenticationException;
 import com.minijira.user.exception.UserNotFoundException;
 import com.minijira.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -37,6 +35,9 @@ class UserControllerTest {
     @MockitoBean
     private UserService userService;
 
+    @MockitoBean
+    private JwtService jwtService;
+
     @Test
     void should_list_users_without_exposing_password() throws Exception {
         UserResponse user = user(1L, true);
@@ -57,31 +58,6 @@ class UserControllerTest {
                         .content("{\"username\":\"ana\",\"email\":\"ana@example.com\",\"password\":\"short\",\"firstName\":\"Ana\",\"lastName\":\"Admin\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fields.password").exists());
-    }
-
-    @Test
-    void should_authenticate_user_with_credentials() throws Exception {
-        given(userService.authenticate(new UserLoginRequest("ana@example.com", "secreto123")))
-                .willReturn(authResponse(1L, true));
-
-        mockMvc.perform(post("/api/users/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"identifier\":\"ana@example.com\",\"password\":\"secreto123\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.tokenType").value("Bearer"))
-                .andExpect(jsonPath("$.user.email").value("ana@example.com"));
-    }
-
-    @Test
-    void should_return_401_for_invalid_credentials() throws Exception {
-        willThrow(new UserAuthenticationException())
-                .given(userService).authenticate(new UserLoginRequest("ana@example.com", "secreto123"));
-
-        mockMvc.perform(post("/api/users/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"identifier\":\"ana@example.com\",\"password\":\"secreto123\"}"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").exists());
     }
 
     @Test
@@ -108,9 +84,5 @@ class UserControllerTest {
         Instant now = Instant.parse("2026-08-25T12:00:00Z");
         return new UserResponse(id, "ana", "ana@example.com", "Ana", "Admin", isActive,
                 UserRole.ADMIN, now, now);
-    }
-
-    private static AuthResponse authResponse(Long id, boolean isActive) {
-        return new AuthResponse("signed.jwt.token", "Bearer", 3600, user(id, isActive));
     }
 }

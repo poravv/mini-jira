@@ -31,15 +31,3 @@ export interface UserUpdateInput {
   role: UserRole;
   password?: string;
 }
-
-export interface UserLoginInput {
-  identifier: string;
-  password: string;
-}
-
-export interface AuthResponse {
-  token: string;
-  tokenType: 'Bearer';
-  expiresIn: number;
-  user: User;
-}

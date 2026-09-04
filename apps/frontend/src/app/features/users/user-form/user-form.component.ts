@@ -2,10 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
-import { USER_ROLES, UserCreateInput, UserRole, UserUpdateInput } from '../user.model';
+import { USER_ROLES, User, UserCreateInput, UserRole, UserUpdateInput } from '../user.model';
 import { UserService } from '../user.service';
-import { UserSessionService } from '../user-session.service';
-import { switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-user-form',
@@ -18,7 +16,6 @@ export class UserFormComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly session = inject(UserSessionService);
 
   readonly roles = USER_ROLES;
   errorMessage = '';
@@ -26,7 +23,6 @@ export class UserFormComponent implements OnInit {
   isLoading = false;
   isSaving = false;
   private userId: number | null = null;
-  isAccountCreation = false;
 
   readonly form = this.fb.group({
     username: ['', [Validators.required, Validators.maxLength(50)]],
@@ -38,28 +34,15 @@ export class UserFormComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.isAccountCreation = this.route.snapshot.data['isAccountCreation'] === true;
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam === null) {
-      if (!this.isAccountCreation && !this.session.currentUser()) {
-        this.router.navigate(['/users/account']);
-        return;
-      }
       this.form.controls.password.addValidators(Validators.required);
-      if (this.isAccountCreation) {
-        this.form.controls.role.setValue('USER');
-      }
       return;
     }
 
     const id = Number(idParam);
     if (!Number.isInteger(id) || id <= 0) {
       this.errorMessage = 'El usuario solicitado no es válido.';
-      return;
-    }
-
-    if (!this.session.currentUser()) {
-      this.router.navigate(['/users/account']);
       return;
     }
 
@@ -97,34 +80,19 @@ export class UserFormComponent implements OnInit {
       this.userService.update(this.userId, input).subscribe(this.saveObserver());
     } else {
       const input: UserCreateInput = value;
-      if (this.isAccountCreation) {
-        this.userService.create(input).pipe(
-          switchMap(() => this.userService.login({ identifier: input.username, password: input.password }))
-        ).subscribe({
-          next: (auth) => {
-            this.session.startSession(auth);
-            this.router.navigate(['/issues']);
-          },
-          error: () => this.handleSaveError()
-        });
-      } else {
-        this.userService.create(input).subscribe({
-          next: () => this.router.navigate(['/users']),
-          error: () => this.handleSaveError()
-        });
-      }
+      this.userService.create(input).subscribe(this.saveObserver());
     }
   }
 
   private saveObserver() {
     return {
-      next: () => this.router.navigate(['/users']),
-      error: () => this.handleSaveError()
+      next: (user: User) => {
+        this.router.navigate(['/users']);
+      },
+      error: () => {
+        this.errorMessage = 'No se pudo guardar el usuario. Verificá que el nombre y email no estén usados.';
+        this.isSaving = false;
+      }
     };
-  }
-
-  private handleSaveError(): void {
-    this.errorMessage = 'No se pudo guardar el usuario. Verificá que el nombre y email no estén usados.';
-    this.isSaving = false;
   }
 }

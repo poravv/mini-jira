@@ -1,5 +1,7 @@
 package com.minijira.weather.controller;
 
+import com.minijira.auth.service.JwtService;
+import com.minijira.user.service.UserService;
 import com.minijira.weather.dto.OpenMeteoResponse;
 import com.minijira.weather.repository.WeatherRepository;
 import com.minijira.weather.service.WeatherService;
@@ -17,10 +19,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Prueba controller + service + handler global juntos; solo se mockea el acceso al proveedor externo. */
+/** Prueba controller + service + handler global juntos, sin ejecutar los filtros de seguridad. */
 @WebMvcTest(WeatherController.class)
-@Import(WeatherService.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import(WeatherService.class)
 class WeatherControllerTest {
 
     @Autowired
@@ -28,6 +30,12 @@ class WeatherControllerTest {
 
     @MockitoBean
     private WeatherRepository weatherRepository;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private UserService userService;
 
     @Test
     void should_return_current_weather_when_open_meteo_responds() throws Exception {

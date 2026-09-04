@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 
 import { User, UserRole } from '../user.model';
 import { UserService } from '../user.service';
-import { UserSessionService } from '../user-session.service';
+import { UserSessionService } from '../../auth/user-session.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -27,7 +27,7 @@ export class UserListComponent implements OnInit {
 
   ngOnInit(): void {
     if (!this.session.currentUser()) {
-      this.router.navigate(['/users/account']);
+      this.router.navigate(['/auth/login']);
       return;
     }
     this.loadUsers();

@@ -23,7 +23,8 @@ mini-jira/
 │   ├── backend/          # API Spring Boot (puerto 8080)
 │   └── frontend/         # SPA Angular (puerto 4200)
 ├── docs/                 # Definición del proyecto y arquitectura
-├── .claude/skills/       # Skills para agentes de IA
+├── .claude/skills/       # Skills para agentes de IA (Claude)
+├── .agents/skills/       # Skills para agentes de IA (Codex), copia idéntica
 ├── docker-compose.yml    # Postgres + Mongo + backend + frontend
 ├── .env.example          # Variables de entorno de ejemplo
 ├── AGENTS.md             # Contexto para agentes de IA (Claude Code / Codex)
@@ -53,25 +54,19 @@ docker compose up --build
 ## Probar el CRUD con curl
 
 ```bash
-# Obtener un JWT (usuario inicial de desarrollo: admin / admin123)
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"identifier":"admin","password":"admin123"}'
-
-# Usar el token devuelto en las operaciones protegidas
+# Crear una incidencia
 curl -X POST http://localhost:8080/api/issues \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <token>" \
   -d '{"title": "Error al guardar", "description": "Falla el formulario de alta", "priority": "ALTA", "status": "PENDIENTE"}'
 
 # Listar incidencias (ordenadas de la mas urgente a la menos urgente)
-curl http://localhost:8080/api/issues -H "Authorization: Bearer <token>"
+curl http://localhost:8080/api/issues
 
 # Listar filtrando por estado y/o prioridad (ambos parametros son opcionales)
-curl "http://localhost:8080/api/issues?status=PENDIENTE&priority=ALTA" -H "Authorization: Bearer <token>"
+curl "http://localhost:8080/api/issues?status=PENDIENTE&priority=ALTA"
 
 # Consultar una incidencia
-curl http://localhost:8080/api/issues/1 -H "Authorization: Bearer <token>"
+curl http://localhost:8080/api/issues/1
 
 # Clima actual de Asunción (proxy de Open-Meteo)
 curl http://localhost:8080/api/weather
@@ -122,14 +117,13 @@ Paso a paso con diagramas (crear rama → commit → push → PR → merge a `de
 
 ## Backlog para juniors
 
-El CRUD de incidencias ya está completo (crear, listar con filtros, consultar, editar y eliminar). El estado vivo del proyecto y el detalle de cada tarea pendiente del MVP (objetivo, endpoints, changesets, pruebas mínimas, rama sugerida) se siguen en [`docs/CHECKLIST.md`](docs/CHECKLIST.md) — es la fuente de verdad del avance y se actualiza en cada PR.
+El CRUD de incidencias y la gestión de usuarios (`/api/users`, con un login provisorio sin JWT) ya están completos. El estado vivo del proyecto y el detalle de cada tarea pendiente del MVP (objetivo, endpoints, changesets, pruebas mínimas, rama sugerida) se siguen en [`docs/CHECKLIST.md`](docs/CHECKLIST.md) — es la fuente de verdad del avance y se actualiza en cada PR.
 
 Cada módulo pendiente es una funcionalidad vertical (pantalla + API + BD + pruebas). Detalle funcional en la sección 6 del [documento de definición](docs/definicion-proyecto-colaborativo-dev-jr.md); orden de ejecución sugerido y tareas concretas en `docs/CHECKLIST.md`.
 
 | Módulo | Descripción | Doc |
 | --- | --- | --- |
-| Usuarios | Registro, perfil, activación/desactivación (tabla `usuario` ya existe) | [AUTHENTICATION.md](docs/AUTHENTICATION.md) |
-| Autenticación JWT | Login seguro, roles, control de acceso | [AUTHENTICATION.md](docs/AUTHENTICATION.md) |
+| Autenticación JWT | Mover el login provisorio del módulo `user` al módulo `auth` + JWT, guard e interceptor (tarea 1 del CHECKLIST) | §6.1 |
 | Proyectos | CRUD de proyectos y sus miembros | §6.2 |
 | Reglas de estado/prioridad | Transiciones válidas (hoy editable libremente por PUT) | §6.3 |
 | Comentarios | Comentarios en incidencias, permisos de autor | §6.4 |
@@ -152,7 +146,6 @@ Cada módulo pendiente es una funcionalidad vertical (pantalla + API + BD + prue
 | [`docs/GIT-FLOW.md`](docs/GIT-FLOW.md) | Flujo Git paso a paso con diagramas: rama, commit, push, Pull Request y merge a `develop` |
 | [`docs/CHECKLIST.md`](docs/CHECKLIST.md) | Checklist vivo de avance del MVP (se actualiza en cada PR) |
 | [`docs/RESTCLIENT-PROXY.md`](docs/RESTCLIENT-PROXY.md) | Cómo consumir un servicio externo con `RestClient` (patrón proxy), con el módulo weather como ejemplo |
-| [`docs/AUTHENTICATION.md`](docs/AUTHENTICATION.md) | Login JWT, permisos, configuración y uso del Bearer token |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Reglas de colaboración: ramas, commits, PRs y code review |
 | [`AGENTS.md`](AGENTS.md) | Guía para asistentes IA (Claude Code / Codex): contexto y convenciones |
 | [`apps/backend/README.md`](apps/backend/README.md) | Backend: cómo correrlo, endpoints, variables de entorno, Liquibase |
