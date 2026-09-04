@@ -1,10 +1,13 @@
 package com.minijira.weather.controller;
 
+import com.minijira.auth.service.JwtService;
+import com.minijira.user.service.UserService;
 import com.minijira.weather.dto.OpenMeteoResponse;
 import com.minijira.weather.repository.WeatherRepository;
 import com.minijira.weather.service.WeatherService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -16,8 +19,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Prueba controller + service + handler global juntos; solo se mockea el acceso al proveedor externo. */
+/** Prueba controller + service + handler global juntos, sin ejecutar los filtros de seguridad. */
 @WebMvcTest(WeatherController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @Import(WeatherService.class)
 class WeatherControllerTest {
 
@@ -26,6 +30,12 @@ class WeatherControllerTest {
 
     @MockitoBean
     private WeatherRepository weatherRepository;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private UserService userService;
 
     @Test
     void should_return_current_weather_when_open_meteo_responds() throws Exception {

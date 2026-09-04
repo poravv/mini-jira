@@ -6,6 +6,7 @@ import com.minijira.issue.entity.IssuePriority;
 import com.minijira.issue.entity.IssueStatus;
 import com.minijira.issue.exception.IssueNotFoundException;
 import com.minijira.issue.service.IssueService;
+import com.minijira.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -39,6 +40,9 @@ class IssueControllerTest {
 
     @MockitoBean
     private JwtService jwtService;
+
+    @MockitoBean
+    private UserService userService;
 
     @Test
     void should_return_issues_when_listing() throws Exception {
