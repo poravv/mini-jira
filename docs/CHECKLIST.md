@@ -12,32 +12,27 @@ Estado vivo del proyecto respecto al [alcance del MVP (§7)](definicion-proyecto
 - [x] Manejo global de errores (404, 400 con detalle por campo, 503) — `apps/backend/src/main/java/com/minijira/common/GlobalExceptionHandler.java`
 - [x] Documentación inicial (README, CONTRIBUTING, ARCHITECTURE, plantilla de PR, skills de IA)
 - [x] Módulo weather: proxy de Open-Meteo con `RestClient` (backend) + tarjeta de clima en el header (frontend) — ver [`docs/RESTCLIENT-PROXY.md`](RESTCLIENT-PROXY.md)
-- [x] Gestión de usuarios: módulo `com.minijira.user` (entidad `User` → tabla `usuario`, roles `ADMIN`/`SUPPORT`/`USER`), endpoints `GET /api/users?active=`, `GET /api/users/{id}`, `POST /api/users` (201, BCrypt), `PUT /api/users/{id}`, `PATCH /api/users/{id}/status` (`{isActive}`); `UserResponse` nunca expone `passwordHash`; changesets `002-create-usuario-table` y `003-insert-admin-user` (admin/admin123, solo dev); feature Angular `users` (`/users`, `/users/new`, `/users/:id/edit`, `/users/account/new` registro) — `apps/backend/src/main/java/com/minijira/user/`, `apps/frontend/src/app/features/users/`
-- [x] Autenticación JWT — `POST /api/auth/login`, filtro stateless, roles `ADMIN`/`SUPPORT`/`USER`, interceptor y guard Angular; `/api/users/login` eliminado.
+- [x] Gestión de usuarios: módulo `com.minijira.user` (entidad `User` → tabla `usuario`, roles `ADMIN`/`SUPPORT`/`USER`), endpoints `GET /api/users?active=`, `GET /api/users/{id}`, `POST /api/users` (201, BCrypt), `PUT /api/users/{id}`, `PATCH /api/users/{id}/status` (`{isActive}`); `UserResponse` nunca expone `passwordHash`; changesets `002-create-usuario-table` y `003-insert-admin-user` (admin/admin123, solo dev); feature Angular `users` (`/users`, `/users/new`, `/users/:id/edit`, todas con `adminGuard`) — `apps/backend/src/main/java/com/minijira/user/`, `apps/frontend/src/app/features/users/`
+- [x] Autenticación JWT — módulo `com.minijira.auth` (`POST /api/auth/login`, `JwtAuthenticationFilter` stateless, HS256 con `JWT_SECRET`, expiración `PT8H`), control de roles con `@PreAuthorize`, `authInterceptor` + `authGuard`/`adminGuard` en Angular; `POST /api/users/login` eliminado. Diagramas en [`ARCHITECTURE.md`](ARCHITECTURE.md#autenticación) — `apps/backend/src/main/java/com/minijira/auth/`, `apps/frontend/src/app/features/auth/`
 
 ## Tareas pendientes del MVP
 
 Orden sugerido: cada tarea depende de que la anterior esté terminada (login habilita asignación con usuario autenticado, etc.). El módulo `user` ya existe (ver arriba). Nomenclatura: el módulo `user` quedó en inglés (`/api/users`); los módulos nuevos usan el idioma que decida el equipo, consistente dentro del módulo. Numeración de changesets: el siguiente libre es `004`; revisá `db/changelog/` antes de crear uno. Referencia funcional: sección [§6 del documento máster](definicion-proyecto-colaborativo-dev-jr.md).
 
-### 1. Inicio de sesión con JWT (mover login a módulo `auth`)
+### 1. Inicio de sesión con JWT — ✔ HECHO (PR #17)
 
-**Objetivo**: login que valida credenciales contra `usuario` y devuelve un JWT; endpoints protegidos exigen el token. Es una tarea de **mover + completar**: el login provisorio vive hoy en el módulo `user` sin token.
-**Depende de**: módulo `user` (hecho).
+Entregado tal cual estaba especificado, con estas diferencias respecto del plan original:
 
-**Qué existe hoy y dónde**:
-- Backend: `UserService.login()` + `UserLoginRequest` + `UserAuthenticationException` + `POST /api/users/login` en `com.minijira.user`. BCrypt vía `spring-security-crypto`, instanciado con `new BCryptPasswordEncoder()` dentro de `UserService`. Sin `spring-boot-starter-security`, sin `SecurityFilterChain`: todos los endpoints abiertos.
-- Frontend: `AccountPageComponent` (`features/users/account-page`, ruta `/users/account`), `login()` en `user.service.ts`, `user-session.service.ts` (objeto `User` completo en `localStorage`, sin token). No hay guard ni interceptor; `/issues` y `/users` se abren sin sesión.
+| Planificado | Entregado |
+| --- | --- |
+| Respuesta `{ token, expiresAt, user }` | `LoginResponse { accessToken, tokenType, userId, username, role }` |
+| Env vars `JWT_SECRET` + `JWT_EXPIRATION_MINUTES` | Solo `JWT_SECRET`; la expiración es `security.jwt.expiration` (`PT8H`) en `application.yml` |
+| Token en `sessionStorage` | `localStorage` (`UserSessionService`, clave `mini-jira-current-user`) |
+| Ruta frontend `/login` | `/auth/login` (feature `features/auth/`) |
+| `POST /api/users` público (registro) | Restringido a `ADMIN`; no hay auto-registro |
+| Solo `authGuard` | `authGuard` en `/issues` + `adminGuard` en `/users` y `@PreAuthorize` por endpoint |
 
-**Qué se mueve**:
-- `UserService.login()` → `AuthService`; `UserLoginRequest` → `LoginRequest`; `UserAuthenticationException` → módulo `auth`. Se elimina `POST /api/users/login`.
-- `AccountPageComponent` → `features/auth/login`; `UserSessionService` → `AuthService`; se quita `login()` de `user.service.ts`.
-
-**Backend**: módulo `com.minijira.auth` (`controller/`, `dto/`, `service/`, `config/`; sin entity ni repository propios: usa `UserService`, nunca `UserRepository` directamente). `POST /api/auth/login` → 200 `{ "token", "expiresAt", "user": {...} }`, 401 si credenciales inválidas o cuenta inactiva. `SecurityFilterChain` stateless en `com.minijira.auth.config` + `JwtAuthenticationFilter extends OncePerRequestFilter`. `PasswordEncoder` pasa a ser un `@Bean`. Secreto y expiración por env vars `JWT_SECRET` y `JWT_EXPIRATION_MINUTES` (agregar a `.env.example`, nunca hardcodear). Rutas públicas: `POST /api/auth/login`, `POST /api/users` (registro), Swagger, `GET /api/weather`; el resto exige `Authorization: Bearer <token>`. Dependencias a agregar y justificar en el PR: `spring-boot-starter-security` + `io.jsonwebtoken:jjwt-api/jjwt-impl/jjwt-jackson` (0.12.x). Sin changeset nuevo.
-**Frontend**: feature `auth` en `features/auth/`: `login/login.component.ts` (ruta `/login`), `auth.service.ts` (login, logout, token en `sessionStorage`, `currentUser` como signal), `auth.interceptor.ts` (agrega `Authorization: Bearer`; en 401 limpia sesión y redirige a `/login`), `auth.guard.ts` (`CanActivateFn`). Registrar el interceptor en `app.config.ts` con `provideHttpClient(withInterceptors([...]))`. Proteger `/issues` y `/users` con `authGuard` en `app.routes.ts`; `''` sigue redirigiendo a `/issues` (el guard manda a `/login` si no hay sesión).
-**Pruebas mínimas**: `should_return_token_when_credentials_are_valid`, `should_return_401_when_password_is_wrong`, `should_return_401_when_user_is_inactive`, `should_reject_request_when_token_is_missing`, `should_allow_request_when_token_is_valid`. Mover los tests de login de `UserServiceTest`/`UserControllerTest` a `AuthServiceTest`/`AuthControllerTest`.
-**Documentación a actualizar**: Swagger, diagrama de secuencia de login (§12), `apps/backend/README.md` (env vars nuevas), `.env.example`, este checklist.
-**Rama sugerida**: `feature/login-jwt`.
-**Definición de terminado**: [ ] login devuelve JWT válido [ ] `POST /api/users/login` eliminado [ ] rutas protegidas rechazan requests sin token [ ] `/issues` y `/users` exigen sesión en el frontend [ ] tests en verde [ ] diagrama de secuencia agregado.
+Rutas públicas reales: `POST /api/auth/login`, `GET /api/weather`, Swagger. Tabla completa de permisos y diagramas de secuencia en [`ARCHITECTURE.md`](ARCHITECTURE.md#autenticación).
 
 ### 2. Proyectos
 
@@ -53,7 +48,7 @@ Orden sugerido: cada tarea depende de que la anterior esté terminada (login hab
 ### 3. Asignación de incidencias a responsables
 
 **Objetivo**: permitir asignar una incidencia a un usuario del proyecto.
-**Depende de**: módulo `user` (hecho), Inicio de sesión con JWT, Proyectos.
+**Depende de**: módulo `user` (hecho), Inicio de sesión con JWT (hecho), Proyectos.
 **Backend**: extiende `com.minijira.issue`; columna `assignee_id` (FK a `usuario`) vía changeset `005-add-assignee-to-issues`; endpoint `PATCH /api/issues/{id}/assignee` (200/404 si la incidencia o el usuario no existen).
 **Frontend**: selector de responsable en `issue-form`; columna "Asignado a" en `issue-list`.
 **Pruebas mínimas**: `should_assign_issue_when_user_exists`, `should_return_404_when_assignee_does_not_exist`.
@@ -75,7 +70,7 @@ Orden sugerido: cada tarea depende de que la anterior esté terminada (login hab
 ### 5. Comentarios
 
 **Objetivo**: comentar una incidencia, listar en orden cronológico, editar/eliminar comentarios propios.
-**Depende de**: módulo `user` (hecho, autor), Inicio de sesión con JWT (identificar quién comenta).
+**Depende de**: módulo `user` (hecho, autor), Inicio de sesión con JWT (hecho — el autor sale de `AuthenticatedUser` en el `SecurityContext`).
 **Backend**: módulo `com.minijira.comentario`; tabla `comentario` (FK a `issue` y `usuario`) vía changeset `006-create-comentario-table`; endpoints `GET /api/issues/{issueId}/comentarios`, `POST /api/issues/{issueId}/comentarios` (201), `PUT /api/comentarios/{id}` (200/403 si no es el autor), `DELETE /api/comentarios/{id}` (204/403).
 **Frontend**: sección de comentarios dentro del detalle de incidencia; `comment.service.ts`.
 **Pruebas mínimas**: `should_list_comments_in_chronological_order`, `should_reject_edit_when_user_is_not_the_author`.
@@ -108,7 +103,7 @@ Orden sugerido: cada tarea depende de que la anterior esté terminada (login hab
 ### 8. Dashboard básico
 
 **Objetivo**: panel con métricas de incidencias por estado/prioridad, asignadas al usuario autenticado y actividad reciente.
-**Depende de**: todo lo anterior (login, asignación, estados, auditoría).
+**Depende de**: todo lo anterior (login hecho; faltan asignación, estados, auditoría).
 **Backend**: módulo `com.minijira.dashboard`; endpoint de solo lectura `GET /api/dashboard` (200) que agrega conteos desde `issue` y últimas entradas de `issue_audit`/`error_log`.
 **Frontend**: feature `dashboard`; ruta `/dashboard` (pantalla inicial tras el login); `dashboard.service.ts`.
 **Pruebas mínimas**: `should_return_issue_counts_by_status`, `should_return_recent_activity`.
@@ -122,7 +117,7 @@ Orden sugerido: cada tarea depende de que la anterior esté terminada (login hab
 - [ ] `docs/TROUBLESHOOTING.md` — problemas frecuentes y soluciones (hoy solo hay una sección corta en el README raíz).
 - [ ] Colección de Postman o Bruno con los endpoints existentes.
 - [ ] Diagrama de casos de uso.
-- [ ] Diagrama de secuencia del inicio de sesión (se agrega junto con la tarea "Inicio de sesión con JWT").
+- [x] Diagrama de secuencia del inicio de sesión — [`ARCHITECTURE.md`](ARCHITECTURE.md#inicio-de-sesión), junto con el de request protegido.
 - [ ] Diagrama de secuencia de creación de una incidencia (ejemplo ya dado en el documento máster, §12).
 - [ ] Modelo o diagrama de entidades y relaciones (MER), a mantener actualizado con cada changeset de Liquibase.
 
