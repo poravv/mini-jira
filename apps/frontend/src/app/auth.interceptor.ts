@@ -16,7 +16,12 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
         sessionService.endSession();
-        void router.navigate(['/auth/login']);
+        // Una carga puede disparar varias peticiones protegidas a la vez. Si el
+        // token ya no es válido, todas responden 401; navegar una sola vez
+        // evita un ciclo de navegación en navegadores que conservan la sesión.
+        if (!router.url.startsWith('/auth/login')) {
+          void router.navigate(['/auth/login']);
+        }
       }
       return throwError(() => error);
     })
