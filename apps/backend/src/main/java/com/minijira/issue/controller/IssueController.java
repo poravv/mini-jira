@@ -41,10 +41,12 @@ public class IssueController {
 
     @GetMapping
     @Operation(summary = "List issues",
-            description = "Filtra por estado y prioridad (ambos opcionales) y devuelve las incidencias más urgentes primero.")
+            description = "Filtra por estado, prioridad, proyecto y asignado (todos opcionales) y devuelve las incidencias más urgentes primero.")
     public List<IssueResponse> list(@RequestParam(required = false) IssueStatus status,
-                                    @RequestParam(required = false) IssuePriority priority) {
-        return issueService.findAll(status, priority);
+                                    @RequestParam(required = false) IssuePriority priority,
+                                    @RequestParam(required = false) Long projectId,
+                                    @RequestParam(required = false) Long assigneeId) {
+        return issueService.findAll(status, priority, projectId, assigneeId);
     }
 
     @GetMapping("/{id}")

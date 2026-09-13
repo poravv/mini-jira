@@ -44,6 +44,31 @@
     </div>
   </div>
 
+  <div class="field-row">
+    <div class="field">
+      <label for="project">Proyecto</label>
+      <select id="project" formControlName="projectId" (change)="onProjectChange()">
+        <option [ngValue]="0">Sin proyecto</option>
+        @for (project of projects; track project.id) {
+          <option [ngValue]="project.id">{{ project.name }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="assignee">Asignar a</label>
+      <select id="assignee" formControlName="assigneeId" [disabled]="!selectedProject || selectedProject.members.length === 0">
+        <option [ngValue]="0">Sin asignar</option>
+        @for (member of selectedProject?.members ?? []; track member.id) {
+          <option [ngValue]="member.id">{{ member.firstName }} {{ member.lastName }} · {{ member.username }}</option>
+        }
+      </select>
+      @if (selectedProject && selectedProject.members.length === 0) {
+        <p class="muted">Primero agregá miembros al proyecto.</p>
+      }
+    </div>
+  </div>
+
   <div class="form-actions">
     <button type="submit" class="btn btn-primary" [disabled]="isSaving">{{ isEditing ? 'Guardar cambios' : 'Guardar' }}</button>
     <a class="btn btn-secondary" routerLink="/issues">Cancelar</a>

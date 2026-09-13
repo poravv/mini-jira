@@ -1,0 +1,129 @@
+@if (errorMessage && !project) {
+  <p class="alert" role="alert">{{ errorMessage }}</p>
+  <a class="btn btn-secondary" routerLink="/proyectos">Volver a proyectos</a>
+} @else if (isLoading) {
+  <p class="muted">Cargando proyecto...</p>
+} @else if (project) {
+  <div class="detail-header">
+    <div>
+      <a class="back-link" routerLink="/proyectos">← Proyectos</a>
+      <p class="eyebrow">Proyecto #{{ project.id }}</p>
+      <h2>{{ project.name }}</h2>
+    </div>
+    <div class="actions">
+      @if (!isEditing) {
+        <button type="button" class="btn btn-secondary" (click)="startEditing()">Editar</button>
+        <button type="button" class="btn btn-danger" [disabled]="isSaving" (click)="deleteProject()">Eliminar</button>
+      }
+    </div>
+  </div>
+
+  @if (errorMessage) {
+    <p class="alert" role="alert">{{ errorMessage }}</p>
+  }
+
+  @if (isEditing) {
+    <form class="panel" [formGroup]="editForm" (ngSubmit)="save()" novalidate>
+      <div class="field">
+        <label for="edit-name">Nombre *</label>
+        <input id="edit-name" type="text" formControlName="name" maxlength="150" />
+        @if (editForm.controls.name.touched && editForm.controls.name.errors?.['required']) {
+          <p class="field-error">El nombre es obligatorio.</p>
+        }
+      </div>
+      <div class="field">
+        <label for="edit-description">Descripción</label>
+        <textarea id="edit-description" formControlName="description" maxlength="2000" rows="4"></textarea>
+      </div>
+      <div class="actions">
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving">{{ isSaving ? 'Guardando...' : 'Guardar cambios' }}</button>
+        <button type="button" class="btn btn-secondary" (click)="cancelEditing()">Cancelar</button>
+      </div>
+    </form>
+  } @else {
+    <section class="panel project-summary">
+      <p>{{ project.description || 'Este proyecto no tiene descripción.' }}</p>
+      <div class="metadata">
+        <span>Creado: {{ project.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+        <span>Actualizado: {{ project.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+    </section>
+  }
+
+  <section class="panel members-panel">
+    <div class="section-header">
+      <div>
+        <p class="eyebrow">Equipo</p>
+        <h3>Miembros ({{ project.members.length }})</h3>
+      </div>
+    </div>
+
+    @if (memberErrorMessage) {
+      <p class="alert" role="alert">{{ memberErrorMessage }}</p>
+    }
+
+    @if (canManageMembers()) {
+      <form class="member-form" [formGroup]="memberForm" (ngSubmit)="addMember()">
+        <div class="field">
+          <label for="member-user">Agregar usuario</label>
+          <select id="member-user" formControlName="userId">
+            <option [ngValue]="0">Seleccioná un usuario</option>
+            @for (user of availableUsers; track user.id) {
+              @if (!project.members.some(member => member.id === user.id)) {
+                <option [ngValue]="user.id">{{ userName(user) }} · {{ user.username }} ({{ roleLabel(user.role) }})</option>
+              }
+            }
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary" [disabled]="isAddingMember || memberForm.invalid">
+          {{ isAddingMember ? 'Agregando...' : 'Agregar miembro' }}
+        </button>
+      </form>
+    }
+
+    @if (project.members.length === 0) {
+      <p class="muted">Todavía no hay miembros asignados.</p>
+    } @else {
+      <div class="members-list">
+        @for (member of project.members; track member.id) {
+          <div class="member-row">
+            <div>
+              <strong>{{ userName(member) }}</strong>
+              <span class="muted">{{ member.email }} · {{ roleLabel(member.role) }}</span>
+            </div>
+            <div class="member-actions">
+              <button type="button" class="btn btn-secondary" (click)="toggleMemberIssues(member)">
+                {{ expandedMemberId === member.id ? 'Ocultar incidencias' : 'Ver incidencias' }}
+              </button>
+              @if (canManageMembers()) {
+                <button type="button" class="btn btn-danger" [disabled]="removingMemberId === member.id" (click)="removeMember(member)">
+                  {{ removingMemberId === member.id ? 'Quitando...' : 'Quitar' }}
+                </button>
+              }
+            </div>
+          </div>
+          @if (expandedMemberId === member.id) {
+            <div class="member-issues" aria-live="polite">
+              @if (isLoadingMemberIssues) {
+                <p class="muted">Cargando incidencias...</p>
+              } @else if (memberIssuesErrorMessage) {
+                <p class="alert" role="alert">{{ memberIssuesErrorMessage }}</p>
+              } @else if (memberIssues.length === 0) {
+                <p class="muted">Este integrante no tiene incidencias asignadas en este proyecto.</p>
+              } @else {
+                <ul class="issue-list">
+                  @for (issue of memberIssues; track issue.id) {
+                    <li>
+                      <a [routerLink]="['/issues', issue.id, 'edit']">{{ issue.title }}</a>
+                      <span class="muted">{{ issue.status }} · {{ issue.priority }}</span>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
+  </section>
+}

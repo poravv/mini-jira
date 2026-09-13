@@ -1,0 +1,33 @@
+<h2>Nuevo proyecto</h2>
+
+@if (errorMessage) {
+  <p class="alert" role="alert">{{ errorMessage }}</p>
+}
+
+<form [formGroup]="form" (ngSubmit)="save()" novalidate>
+  <div class="field">
+    <label for="name">Nombre *</label>
+    <input id="name" type="text" formControlName="name" maxlength="150" autocomplete="off" />
+    @if (form.controls.name.touched && form.controls.name.errors?.['required']) {
+      <p class="field-error">El nombre es obligatorio.</p>
+    }
+    @if (form.controls.name.touched && form.controls.name.errors?.['maxlength']) {
+      <p class="field-error">El nombre no puede superar los 150 caracteres.</p>
+    }
+  </div>
+
+  <div class="field">
+    <label for="description">Descripción</label>
+    <textarea id="description" formControlName="description" maxlength="2000" rows="5"></textarea>
+    @if (form.controls.description.touched && form.controls.description.errors?.['maxlength']) {
+      <p class="field-error">La descripción no puede superar los 2000 caracteres.</p>
+    }
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+      {{ isSaving ? 'Guardando...' : 'Crear proyecto' }}
+    </button>
+    <a class="btn btn-secondary" routerLink="/proyectos">Cancelar</a>
+  </div>
+</form>

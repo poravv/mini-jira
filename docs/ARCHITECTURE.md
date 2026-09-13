@@ -54,7 +54,7 @@ Reglas: el flujo es siempre controller → service → repository; los módulos 
 | Tabla `usuario` (Liquibase 002) | Parcial: solo esquema, sin código Java |
 | Cambios de estado/prioridad con reglas | Parcial: campos editables por PUT; faltan reglas de transición |
 | Autenticación JWT, usuarios y roles | ✔ Construido: `POST /api/auth/login`, Bearer tokens y permisos `ADMIN` |
-| Proyectos | Pendiente (junior) |
+| Proyectos | ✔ Construido (backend + frontend + miembros) |
 | Comentarios | Pendiente (junior) |
 | Auditoría e historial en MongoDB | Pendiente (junior) — Mongo ya está en compose, sin uso |
 | Dashboard de métricas | Pendiente (junior) |

@@ -13,13 +13,19 @@ export class IssueService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/issues';
 
-  getAll(status?: IssueStatus, priority?: IssuePriority): Observable<Issue[]> {
+  getAll(status?: IssueStatus, priority?: IssuePriority, projectId?: number, assigneeId?: number): Observable<Issue[]> {
     let params = new HttpParams();
     if (status) {
       params = params.set('status', status);
     }
     if (priority) {
       params = params.set('priority', priority);
+    }
+    if (projectId !== undefined) {
+      params = params.set('projectId', projectId);
+    }
+    if (assigneeId !== undefined) {
+      params = params.set('assigneeId', assigneeId);
     }
     return this.http.get<Issue[]>(this.baseUrl, { params });
   }

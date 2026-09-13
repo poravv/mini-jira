@@ -15,6 +15,9 @@ describe('IssueService', () => {
     description: 'Añadir guía de edición',
     status: 'EN_PROGRESO',
     priority: 'MEDIA',
+    projectId: null,
+    projectName: null,
+    assignee: null,
     createdAt: '2026-08-17T10:00:00Z',
     updatedAt: '2026-08-17T10:00:00Z'
   };
@@ -40,9 +43,11 @@ describe('IssueService', () => {
   it('actualiza una incidencia con PUT', () => {
     const input: IssueInput = {
       title: issue.title,
-      description: issue.description,
+      description: issue.description ?? '',
       status: issue.status,
-      priority: issue.priority
+      priority: issue.priority,
+      projectId: null,
+      assigneeId: null
     };
     service.update(7, input).subscribe((result) => expect(result).toEqual(issue));
 
@@ -76,6 +81,18 @@ describe('IssueService', () => {
     const request = httpTesting.expectOne('/api/issues');
     expect(request.request.method).toBe('GET');
     expect(request.request.params.keys().length).toBe(0);
+    request.flush([]);
+  });
+
+  it('filtra las incidencias por proyecto y asignado', () => {
+    service.getAll(undefined, undefined, 7, 3).subscribe();
+
+    const request = httpTesting.expectOne(
+      (req) => req.url === '/api/issues'
+        && req.params.get('projectId') === '7'
+        && req.params.get('assigneeId') === '3'
+    );
+    expect(request.request.method).toBe('GET');
     request.flush([]);
   });
 });

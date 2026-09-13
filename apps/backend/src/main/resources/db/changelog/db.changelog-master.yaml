@@ -5,3 +5,7 @@ databaseChangeLog:
       file: db/changelog/002-create-usuario-table.yaml
   - include:
       file: db/changelog/003-insert-admin-user.yaml
+  - include:
+      file: db/changelog/004-create-proyecto-tables.yaml
+  - include:
+      file: db/changelog/005-add-issue-project-assignee.yaml

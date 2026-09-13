@@ -1,6 +1,10 @@
 package com.minijira.common;
 
 import com.minijira.issue.exception.IssueNotFoundException;
+import com.minijira.issue.exception.IssueAssignmentException;
+import com.minijira.proyecto.exception.ProyectoMemberConflictException;
+import com.minijira.proyecto.exception.ProyectoMemberNotFoundException;
+import com.minijira.proyecto.exception.ProyectoNotFoundException;
 import com.minijira.user.exception.UserConflictException;
 import com.minijira.user.exception.UserAuthenticationException;
 import com.minijira.user.exception.UserNotFoundException;
@@ -25,6 +29,30 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IssueNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleNotFound(IssueNotFoundException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(IssueAssignmentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleIssueAssignment(IssueAssignmentException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(ProyectoNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleProyectoNotFound(ProyectoNotFoundException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(ProyectoMemberNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleProyectoMemberNotFound(ProyectoMemberNotFoundException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(ProyectoMemberConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, String> handleProyectoMemberConflict(ProyectoMemberConflictException ex) {
         return Map.of("error", ex.getMessage());
     }
 

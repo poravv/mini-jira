@@ -2,7 +2,7 @@
 
 REST API del issue tracker **mini-jira** (proyecto de práctica). Spring Boot 3.4 + Java 21 + PostgreSQL + Liquibase.
 
-Monolito modular: paquete base `com.minijira`, módulos `issue`, `user` y `auth`, módulo `weather` (proxy de Open-Meteo, sin base de datos) y paquete `common` (manejo global de errores).
+Monolito modular: paquete base `com.minijira`, módulos `issue`, `user`, `auth` y `proyecto`, módulo `weather` (proxy de Open-Meteo, sin base de datos) y paquete `common` (manejo global de errores).
 
 ## Requisitos
 
@@ -51,16 +51,23 @@ docker run -p 8080:8080 -e DB_HOST=host.docker.internal mini-jira-backend
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | `POST` | `/api/auth/login` | Autentica por usuario/email y devuelve `{ token, tokenType, expiresIn, user }` |
-| `GET` | `/api/issues` | Listar issues; acepta `status` y `priority` (opcionales) y devuelve las mas urgentes primero |
+| `GET` | `/api/issues` | Listar issues; acepta `status`, `priority`, `projectId` y `assigneeId` (opcionales) y devuelve las mas urgentes primero |
 | `GET` | `/api/issues/{id}` | Obtener un issue (404 si no existe) |
 | `POST` | `/api/issues` | Crear issue (201; 400 con errores por campo si falla validación) |
 | `PUT` | `/api/issues/{id}` | Editar un issue (200; 404 si no existe; 400 si falla validación) |
 | `DELETE` | `/api/issues/{id}` | Eliminar un issue (204; 404 si no existe) |
+| `GET` | `/api/proyectos` | Listar proyectos (requiere JWT) |
+| `GET` | `/api/proyectos/{id}` | Obtener un proyecto con sus miembros (404 si no existe) |
+| `POST` | `/api/proyectos` | Crear proyecto (201; 400 si falla validación) |
+| `PUT` | `/api/proyectos/{id}` | Editar proyecto (200; 404 si no existe) |
+| `DELETE` | `/api/proyectos/{id}` | Eliminar proyecto (204; 404 si no existe) |
+| `POST` | `/api/proyectos/{id}/miembros` | Agregar un usuario existente (ADMIN; body `{ userId }`) |
+| `DELETE` | `/api/proyectos/{id}/miembros/{userId}` | Quitar un miembro existente (ADMIN; 204) |
 | `GET` | `/api/weather` | Clima actual de Asunción vía [Open-Meteo](https://open-meteo.com) (200; 503 si el proveedor falla o tarda más de 3s) |
 
-El registro (`POST /api/users`) y el clima son públicos. El login también se mantiene disponible como `POST /api/users/login` por compatibilidad. Todas las operaciones de incidencias requieren `Authorization: Bearer <token>`. La consulta y administración de usuarios requieren además el rol `ADMIN` cuando corresponde.
+El registro (`POST /api/users`) y el clima son públicos. El login también se mantiene disponible como `POST /api/users/login` por compatibilidad. Todas las operaciones de incidencias y proyectos requieren `Authorization: Bearer <token>`. La consulta y administración de usuarios, y la gestión de miembros de proyectos, requieren el rol `ADMIN` cuando corresponde.
 
-Modelo `Issue`: `title` (requerido, máx. 150), `description` (opcional), `status` (`PENDIENTE` | `EN_PROGRESO` | `RESUELTA` | `CERRADA`, default `PENDIENTE`), `priority` (`BAJA` | `MEDIA` | `ALTA` | `CRITICA`, default `MEDIA`), `createdAt` / `updatedAt` automáticos.
+Modelo `Issue`: `title` (requerido, máx. 150), `description` (opcional), `status` (`PENDIENTE` | `EN_PROGRESO` | `RESUELTA` | `CERRADA`, default `PENDIENTE`), `priority` (`BAJA` | `MEDIA` | `ALTA` | `CRITICA`, default `MEDIA`), `projectId` (opcional), `assigneeId` (opcional), `createdAt` / `updatedAt` automáticos. Si se informa `assigneeId`, también debe informarse `projectId` y el usuario debe ser miembro de ese proyecto. La respuesta incluye `projectId`, `projectName` y el objeto `assignee`.
 
 No hay configuración de CORS: el frontend siempre llama a `/api` con rutas relativas a través de un proxy (el dev server de Angular en desarrollo, nginx en Docker), así que el navegador nunca hace una petición cross-origin.
 
@@ -83,11 +90,11 @@ El esquema lo maneja Liquibase (Hibernate solo valida: `ddl-auto: validate`). Al
 src/main/resources/db/changelog/db.changelog-master.yaml
 ```
 
-Changesets existentes: `001-create-issues-table`, `002-create-usuario-table` y `003-insert-admin-user`.
+Changesets existentes: `001-create-issues-table`, `002-create-usuario-table`, `003-insert-admin-user`, `004-create-proyecto-tables` y `005-add-issue-project-assignee`.
 
 ### Agregar un changeset
 
-1. Crear un archivo nuevo en `src/main/resources/db/changelog/`, por ejemplo `003-create-proyecto-tables.yaml`, con un `changeSet` de `id` único y `author`.
+1. Crear un archivo nuevo en `src/main/resources/db/changelog/`, por ejemplo `005-create-comentario-table.yaml`, con un `changeSet` de `id` único y `author`.
 2. Incluirlo al final del master:
 
 ```yaml
@@ -97,7 +104,11 @@ databaseChangeLog:
   - include:
       file: db/changelog/002-create-usuario-table.yaml
   - include:
-      file: db/changelog/003-create-proyecto-tables.yaml
+      file: db/changelog/003-insert-admin-user.yaml
+  - include:
+      file: db/changelog/004-create-proyecto-tables.yaml
+  - include:
+      file: db/changelog/005-add-issue-project-assignee.yaml
 ```
 
 3. Arrancar la app: Liquibase aplica el changeset y lo registra en la tabla `databasechangelog`.
