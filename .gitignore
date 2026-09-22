@@ -1,5 +1,6 @@
 # Java / Maven
 target/
+apps/backend/.maven-home/
 *.class
 *.jar
 !.mvn/wrapper/maven-wrapper.jar
@@ -19,6 +20,7 @@ npm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Entorno (nunca versionar credenciales reales)
 .env
@@ -36,3 +38,7 @@ docker-compose.override.yml
 # Runtime local de asistentes IA (las skills en .claude/skills/ SÍ se versionan)
 .claude/scheduled_tasks.lock
 .claude/settings.local.json
+
+# Artefactos locales (backups de agentes, capturas sueltas en la raíz)
+.agents-local-backup-*/
+/*.png
