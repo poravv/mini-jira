@@ -17,8 +17,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.security.test.context.support.WithMockUser;
 
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -85,5 +87,41 @@ class SecurityConfigTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"userId\":2}"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void should_forbid_project_update_when_caller_is_not_admin() throws Exception {
+        mockMvc.perform(put("/api/proyectos/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Portal interno\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void should_forbid_project_deletion_when_caller_is_not_admin() throws Exception {
+        mockMvc.perform(delete("/api/proyectos/1"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void should_allow_project_deletion_when_caller_is_admin() throws Exception {
+        mockMvc.perform(delete("/api/proyectos/1"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void should_allow_project_update_when_caller_is_admin() throws Exception {
+        given(proyectoService.update(org.mockito.ArgumentMatchers.eq(1L), org.mockito.ArgumentMatchers.any()))
+                .willReturn(new com.minijira.proyecto.dto.ProyectoResponse(
+                        1L, "Portal interno", null, java.time.Instant.now(), java.time.Instant.now(), java.util.List.of()));
+
+        mockMvc.perform(put("/api/proyectos/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Portal interno\"}"))
+                .andExpect(status().isOk());
     }
 }

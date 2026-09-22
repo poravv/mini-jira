@@ -12,11 +12,15 @@ import com.minijira.proyecto.entity.Proyecto;
 import com.minijira.proyecto.repository.ProyectoRepository;
 import com.minijira.user.entity.User;
 import com.minijira.user.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,6 +46,11 @@ class IssueServiceTest {
 
     @InjectMocks
     private IssueService issueService;
+
+    @AfterEach
+    void clearAuthentication() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Test
     void should_list_all_issues_when_no_filter_is_given() {
@@ -92,6 +101,7 @@ class IssueServiceTest {
 
     @Test
     void should_assign_an_issue_to_a_member_of_its_project() {
+        authenticateAs("ana", "ROLE_ADMIN");
         Proyecto project = org.mockito.Mockito.mock(Proyecto.class);
         User assignee = org.mockito.Mockito.mock(User.class);
         given(project.getId()).willReturn(7L);
@@ -124,5 +134,28 @@ class IssueServiceTest {
                 "Asignación inválida", null, IssueStatus.PENDIENTE, IssuePriority.MEDIA, 7L, 3L)));
 
         verify(issueRepository, never()).save(org.mockito.ArgumentMatchers.any(Issue.class));
+    }
+
+    @Test
+    void should_reject_the_assignment_when_the_caller_is_not_a_project_member() {
+        authenticateAs("carlos", "ROLE_USER");
+        Proyecto project = org.mockito.Mockito.mock(Proyecto.class);
+        User assignee = org.mockito.Mockito.mock(User.class);
+        given(project.getId()).willReturn(7L);
+        given(project.getMembers()).willReturn(Set.of(assignee));
+        given(assignee.getId()).willReturn(3L);
+        given(assignee.getUsername()).willReturn("ana");
+        given(userRepository.findById(3L)).willReturn(Optional.of(assignee));
+        given(proyectoRepository.findById(7L)).willReturn(Optional.of(project));
+
+        assertThrows(IssueAssignmentException.class, () -> issueService.create(new IssueRequest(
+                "Asignación ajena", null, IssueStatus.PENDIENTE, IssuePriority.MEDIA, 7L, 3L)));
+
+        verify(issueRepository, never()).save(org.mockito.ArgumentMatchers.any(Issue.class));
+    }
+
+    private static void authenticateAs(String username, String authority) {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                username, "n/a", List.of(new SimpleGrantedAuthority(authority))));
     }
 }

@@ -62,12 +62,12 @@ export class ProjectDetailComponent implements OnInit {
 
     this.projectId = id;
     this.loadProject();
-    if (this.canManageMembers()) {
+    if (this.canManageProject()) {
       this.loadAvailableUsers();
     }
   }
 
-  canManageMembers(): boolean {
+  canManageProject(): boolean {
     return this.session.hasRole('ADMIN');
   }
 

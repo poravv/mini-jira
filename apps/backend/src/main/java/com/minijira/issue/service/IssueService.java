@@ -17,6 +17,8 @@ import com.minijira.user.exception.UserNotFoundException;
 import com.minijira.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -128,6 +130,29 @@ public class IssueService {
         if (!isProjectMember) {
             throw new IssueAssignmentException("User " + assignee.getId() + " is not a member of project " + project.getId());
         }
+        requireCallerBelongsToProject(project);
         issue.setAssignee(assignee);
+    }
+
+    /**
+     * Solo un ADMIN o un miembro del proyecto puede asignar incidencias dentro de ese proyecto:
+     * de lo contrario cualquier usuario autenticado podría repartir trabajo en equipos ajenos.
+     */
+    private void requireCallerBelongsToProject(Proyecto project) {
+        Authentication caller = SecurityContextHolder.getContext().getAuthentication();
+        if (caller == null || !caller.isAuthenticated()) {
+            throw new IssueAssignmentException("An authenticated user is required to assign an issue");
+        }
+
+        boolean isAdmin = caller.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+        boolean isCallerMember = project.getMembers().stream()
+                .anyMatch(member -> caller.getName().equals(member.getUsername()));
+        if (!isAdmin && !isCallerMember) {
+            log.warn("Caller is not allowed to assign issues in this project: caller={} projectId={}",
+                    caller.getName(), project.getId());
+            throw new IssueAssignmentException(
+                    "User " + caller.getName() + " is not a member of project " + project.getId());
+        }
     }
 }

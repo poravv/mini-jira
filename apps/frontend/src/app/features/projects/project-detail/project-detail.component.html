@@ -11,7 +11,7 @@
       <h2>{{ project.name }}</h2>
     </div>
     <div class="actions">
-      @if (!isEditing) {
+      @if (!isEditing && canManageProject()) {
         <button type="button" class="btn btn-secondary" (click)="startEditing()">Editar</button>
         <button type="button" class="btn btn-danger" [disabled]="isSaving" (click)="deleteProject()">Eliminar</button>
       }
@@ -62,7 +62,7 @@
       <p class="alert" role="alert">{{ memberErrorMessage }}</p>
     }
 
-    @if (canManageMembers()) {
+    @if (canManageProject()) {
       <form class="member-form" [formGroup]="memberForm" (ngSubmit)="addMember()">
         <div class="field">
           <label for="member-user">Agregar usuario</label>
@@ -95,7 +95,7 @@
               <button type="button" class="btn btn-secondary" (click)="toggleMemberIssues(member)">
                 {{ expandedMemberId === member.id ? 'Ocultar incidencias' : 'Ver incidencias' }}
               </button>
-              @if (canManageMembers()) {
+              @if (canManageProject()) {
                 <button type="button" class="btn btn-danger" [disabled]="removingMemberId === member.id" (click)="removeMember(member)">
                   {{ removingMemberId === member.id ? 'Quitando...' : 'Quitar' }}
                 </button>
