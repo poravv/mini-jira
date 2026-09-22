@@ -1,5 +1,6 @@
 package com.minijira.proyecto.service;
 
+import com.minijira.issue.repository.IssueRepository;
 import com.minijira.proyecto.dto.ProyectoRequest;
 import com.minijira.proyecto.dto.ProyectoResponse;
 import com.minijira.proyecto.entity.Proyecto;
@@ -13,6 +14,7 @@ import com.minijira.user.exception.UserNotFoundException;
 import com.minijira.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,10 +28,14 @@ public class ProyectoService {
 
     private final ProyectoRepository proyectoRepository;
     private final UserRepository userRepository;
+    private final IssueRepository issueRepository;
 
-    public ProyectoService(ProyectoRepository proyectoRepository, UserRepository userRepository) {
+    public ProyectoService(ProyectoRepository proyectoRepository,
+                           UserRepository userRepository,
+                           IssueRepository issueRepository) {
         this.proyectoRepository = proyectoRepository;
         this.userRepository = userRepository;
+        this.issueRepository = issueRepository;
     }
 
     @Transactional(readOnly = true)
@@ -58,10 +64,15 @@ public class ProyectoService {
         return ProyectoMapper.toResponse(updated);
     }
 
+    /**
+     * Borra el proyecto y deja sus incidencias sin proyecto ni asignado, en la misma transacción:
+     * una incidencia con asignado pero sin proyecto es un estado que la asignación no permite crear.
+     */
     public void deleteById(Long id) {
         Proyecto proyecto = getProyecto(id);
+        int detachedIssues = issueRepository.clearProjectAndAssignee(id);
         proyectoRepository.delete(proyecto);
-        log.info("Project deleted: id={}", id);
+        log.info("Project deleted: id={} detachedIssues={}", id, detachedIssues);
     }
 
     public ProyectoResponse addMember(Long projectId, Long userId) {
@@ -72,12 +83,22 @@ public class ProyectoService {
         }
 
         proyecto.getMembers().add(user);
-        Proyecto updated = proyectoRepository.save(proyecto);
+        Proyecto updated;
+        try {
+            updated = proyectoRepository.saveAndFlush(proyecto);
+        } catch (DataIntegrityViolationException ex) {
+            log.warn("Duplicate project member rejected by the database: projectId={} userId={}", projectId, userId);
+            throw new ProyectoMemberConflictException(projectId, userId);
+        }
         log.info("Project member added: projectId={} userId={}", projectId, userId);
         return ProyectoMapper.toResponse(updated);
     }
 
-    public ProyectoResponse removeMember(Long projectId, Long userId) {
+    /**
+     * Quita al usuario del proyecto y, en la misma transacción, desasigna las incidencias de ese
+     * proyecto que tenía a cargo: si no, quedaría asignado a un proyecto del que ya no es miembro.
+     */
+    public void removeMember(Long projectId, Long userId) {
         Proyecto proyecto = getProyecto(projectId);
         getUser(userId);
         boolean removed = proyecto.getMembers().removeIf(member -> member.getId().equals(userId));
@@ -85,9 +106,10 @@ public class ProyectoService {
             throw new ProyectoMemberNotFoundException(projectId, userId);
         }
 
-        Proyecto updated = proyectoRepository.save(proyecto);
-        log.info("Project member removed: projectId={} userId={}", projectId, userId);
-        return ProyectoMapper.toResponse(updated);
+        proyectoRepository.save(proyecto);
+        int unassignedIssues = issueRepository.clearAssignee(projectId, userId);
+        log.info("Project member removed: projectId={} userId={} unassignedIssues={}",
+                projectId, userId, unassignedIssues);
     }
 
     private Proyecto getProyecto(Long id) {
