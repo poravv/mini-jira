@@ -94,7 +94,7 @@ Changesets existentes: `001-create-issues-table`, `002-create-usuario-table`, `0
 
 ### Agregar un changeset
 
-1. Crear un archivo nuevo en `src/main/resources/db/changelog/`, por ejemplo `005-create-comentario-table.yaml`, con un `changeSet` de `id` único y `author`.
+1. Crear un archivo nuevo en `src/main/resources/db/changelog/`, por ejemplo `006-create-comentario-table.yaml`, con un `changeSet` de `id` único y `author`.
 2. Incluirlo al final del master:
 
 ```yaml
