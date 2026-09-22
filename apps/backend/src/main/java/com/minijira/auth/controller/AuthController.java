@@ -1,8 +1,8 @@
 package com.minijira.auth.controller;
 
-import com.minijira.user.dto.AuthResponse;
-import com.minijira.user.dto.UserLoginRequest;
-import com.minijira.user.service.UserService;
+import com.minijira.auth.dto.LoginRequest;
+import com.minijira.auth.dto.LoginResponse;
+import com.minijira.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -15,16 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 @Tag(name = "Authentication", description = "JWT authentication")
 public class AuthController {
-
-    private final UserService userService;
-
-    public AuthController(UserService userService) {
-        this.userService = userService;
-    }
+    private final AuthService authService;
+    public AuthController(AuthService authService) { this.authService = authService; }
 
     @PostMapping("/login")
-    @Operation(summary = "Authenticate and obtain a JWT")
-    public AuthResponse login(@Valid @RequestBody UserLoginRequest request) {
-        return userService.authenticate(request);
-    }
+    @Operation(summary = "Authenticate and receive a JWT")
+    public LoginResponse login(@Valid @RequestBody LoginRequest request) { return authService.login(request); }
 }

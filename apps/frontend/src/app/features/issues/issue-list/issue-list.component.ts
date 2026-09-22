@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 
 import { ISSUE_PRIORITIES, ISSUE_STATUSES, Issue, IssuePriority, IssueStatus } from '../issue.model';
 import { IssueService } from '../issue.service';
-import { UserSessionService } from '../../users/user-session.service';
+import { UserSessionService } from '../../auth/user-session.service';
 
 /** Pantalla de listado (/issues): pide las incidencias a IssueService y muestra tabla, carga o error. */
 @Component({

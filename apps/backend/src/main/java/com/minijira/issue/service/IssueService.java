@@ -12,7 +12,9 @@ import com.minijira.issue.repository.IssueRepository;
 import com.minijira.proyecto.entity.Proyecto;
 import com.minijira.proyecto.repository.ProyectoRepository;
 import com.minijira.proyecto.exception.ProyectoNotFoundException;
+import com.minijira.auth.service.AuthenticatedUser;
 import com.minijira.user.entity.User;
+import com.minijira.user.entity.UserRole;
 import com.minijira.user.exception.UserNotFoundException;
 import com.minijira.user.repository.UserRepository;
 import org.slf4j.Logger;
@@ -140,19 +142,22 @@ public class IssueService {
      */
     private void requireCallerBelongsToProject(Proyecto project) {
         Authentication caller = SecurityContextHolder.getContext().getAuthentication();
-        if (caller == null || !caller.isAuthenticated()) {
+        if (caller == null || !caller.isAuthenticated()
+                || !(caller.getPrincipal() instanceof AuthenticatedUser authenticatedCaller)) {
             throw new IssueAssignmentException("An authenticated user is required to assign an issue");
         }
 
-        boolean isAdmin = caller.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+        if (authenticatedCaller.role() == UserRole.ADMIN) {
+            return;
+        }
+
         boolean isCallerMember = project.getMembers().stream()
-                .anyMatch(member -> caller.getName().equals(member.getUsername()));
-        if (!isAdmin && !isCallerMember) {
-            log.warn("Caller is not allowed to assign issues in this project: caller={} projectId={}",
-                    caller.getName(), project.getId());
+                .anyMatch(member -> member.getId().equals(authenticatedCaller.id()));
+        if (!isCallerMember) {
+            log.warn("Caller is not allowed to assign issues in this project: callerId={} projectId={}",
+                    authenticatedCaller.id(), project.getId());
             throw new IssueAssignmentException(
-                    "User " + caller.getName() + " is not a member of project " + project.getId());
+                    "User " + authenticatedCaller.username() + " is not a member of project " + project.getId());
         }
     }
 }

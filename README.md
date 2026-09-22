@@ -12,6 +12,7 @@ El objetivo principal es **formativo**: que desarrolladores junior practiquen un
 | Backend | Java 21 · Spring Boot 3 · Maven |
 | BD relacional | PostgreSQL 16 (migraciones con Liquibase) |
 | BD no relacional | MongoDB 7 (reservada para auditoría, aún sin uso) |
+| Autenticación | JWT stateless (Spring Security + jjwt) |
 | API docs | Swagger / OpenAPI |
 | Entorno local | Docker Compose |
 
@@ -23,7 +24,8 @@ mini-jira/
 │   ├── backend/          # API Spring Boot (puerto 8080)
 │   └── frontend/         # SPA Angular (puerto 4200)
 ├── docs/                 # Definición del proyecto y arquitectura
-├── .claude/skills/       # Skills para agentes de IA
+├── .claude/skills/       # Skills para agentes de IA (Claude)
+├── .agents/skills/       # Skills para agentes de IA (Codex), copia idéntica
 ├── docker-compose.yml    # Postgres + Mongo + backend + frontend
 ├── .env.example          # Variables de entorno de ejemplo
 ├── AGENTS.md             # Contexto para agentes de IA (Claude Code / Codex)
@@ -39,6 +41,7 @@ mini-jira/
 
 ```bash
 cp .env.example .env
+# JWT_SECRET es obligatorio (mínimo 32 caracteres); sin él el backend no arranca
 docker compose up --build
 ```
 
@@ -52,32 +55,33 @@ docker compose up --build
 
 ## Probar el CRUD con curl
 
-```bash
-# Obtener un JWT (usuario inicial de desarrollo: admin / admin123)
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"identifier":"admin","password":"admin123"}'
+Salvo `/api/auth/login` y `/api/weather`, todos los endpoints exigen `Authorization: Bearer <token>`.
 
-# Usar el token devuelto en las operaciones protegidas
-curl -X POST http://localhost:8080/api/issues \
+```bash
+# 1. Obtener el token (admin/admin123 es el usuario semilla de desarrollo)
+TOKEN=$(curl -s -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <token>" \
+  -d '{"identifier": "admin", "password": "admin123"}' | jq -r .accessToken)
+
+# 2. Crear una incidencia (requiere rol ADMIN o SUPPORT)
+curl -X POST http://localhost:8080/api/issues \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d '{"title": "Error al guardar", "description": "Falla el formulario de alta", "priority": "ALTA", "status": "PENDIENTE"}'
 
 # Listar incidencias (ordenadas de la mas urgente a la menos urgente)
-curl http://localhost:8080/api/issues -H "Authorization: Bearer <token>"
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/issues
 
 # Listar filtrando por estado y/o prioridad (ambos parametros son opcionales)
-curl "http://localhost:8080/api/issues?status=PENDIENTE&priority=ALTA" -H "Authorization: Bearer <token>"
+curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/api/issues?status=PENDIENTE&priority=ALTA"
 
 # Consultar una incidencia
-curl http://localhost:8080/api/issues/1 -H "Authorization: Bearer <token>"
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/issues/1
 
-# Clima actual de Asunción (proxy de Open-Meteo)
+# Clima actual de Asunción (proxy de Open-Meteo) — ruta pública
 curl http://localhost:8080/api/weather
 ```
 
-El contrato exacto de los campos está en Swagger. Las incidencias se pueden editar con `PUT /api/issues/{id}` y eliminar con `DELETE /api/issues/{id}`.
+El contrato exacto de los campos está en Swagger. Las incidencias se pueden editar con `PUT /api/issues/{id}` (ADMIN o SUPPORT) y eliminar con `DELETE /api/issues/{id}` (ADMIN).
 
 ## Modo desarrollo sin Docker
 
@@ -90,7 +94,7 @@ cd apps/backend
 ./mvnw spring-boot:run
 ```
 
-Usa por defecto `DB_HOST=localhost`, `DB_NAME=minijira`, `DB_USER=minijira`, `DB_PASSWORD=minijira`. Liquibase aplica las migraciones al arrancar.
+Usa por defecto `DB_HOST=localhost`, `DB_NAME=minijira`, `DB_USER=minijira`, `DB_PASSWORD=minijira`. `JWT_SECRET` no tiene default: exportala antes de arrancar. Liquibase aplica las migraciones al arrancar.
 
 **Frontend** (puerto 4200, con proxy de `/api` al backend):
 
@@ -122,14 +126,12 @@ Paso a paso con diagramas (crear rama → commit → push → PR → merge a `de
 
 ## Backlog para juniors
 
-El CRUD de incidencias ya está completo (crear, listar con filtros, consultar, editar y eliminar). El estado vivo del proyecto y el detalle de cada tarea pendiente del MVP (objetivo, endpoints, changesets, pruebas mínimas, rama sugerida) se siguen en [`docs/CHECKLIST.md`](docs/CHECKLIST.md) — es la fuente de verdad del avance y se actualiza en cada PR.
+El CRUD de incidencias, la gestión de usuarios (`/api/users`) y la autenticación JWT (`/api/auth/login`, con control de roles) ya están completos. El estado vivo del proyecto y el detalle de cada tarea pendiente del MVP (objetivo, endpoints, changesets, pruebas mínimas, rama sugerida) se siguen en [`docs/CHECKLIST.md`](docs/CHECKLIST.md) — es la fuente de verdad del avance y se actualiza en cada PR.
 
 Cada módulo pendiente es una funcionalidad vertical (pantalla + API + BD + pruebas). Detalle funcional en la sección 6 del [documento de definición](docs/definicion-proyecto-colaborativo-dev-jr.md); orden de ejecución sugerido y tareas concretas en `docs/CHECKLIST.md`.
 
 | Módulo | Descripción | Doc |
 | --- | --- | --- |
-| Usuarios | Registro, perfil, activación/desactivación (tabla `usuario` ya existe) | [AUTHENTICATION.md](docs/AUTHENTICATION.md) |
-| Autenticación JWT | Login seguro, roles, control de acceso | [AUTHENTICATION.md](docs/AUTHENTICATION.md) |
 | Proyectos | CRUD de proyectos y sus miembros | §6.2 |
 | Reglas de estado/prioridad | Transiciones válidas (hoy editable libremente por PUT) | §6.3 |
 | Comentarios | Comentarios en incidencias, permisos de autor | §6.4 |
@@ -152,7 +154,6 @@ Cada módulo pendiente es una funcionalidad vertical (pantalla + API + BD + prue
 | [`docs/GIT-FLOW.md`](docs/GIT-FLOW.md) | Flujo Git paso a paso con diagramas: rama, commit, push, Pull Request y merge a `develop` |
 | [`docs/CHECKLIST.md`](docs/CHECKLIST.md) | Checklist vivo de avance del MVP (se actualiza en cada PR) |
 | [`docs/RESTCLIENT-PROXY.md`](docs/RESTCLIENT-PROXY.md) | Cómo consumir un servicio externo con `RestClient` (patrón proxy), con el módulo weather como ejemplo |
-| [`docs/AUTHENTICATION.md`](docs/AUTHENTICATION.md) | Login JWT, permisos, configuración y uso del Bearer token |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Reglas de colaboración: ramas, commits, PRs y code review |
 | [`AGENTS.md`](AGENTS.md) | Guía para asistentes IA (Claude Code / Codex): contexto y convenciones |
 | [`apps/backend/README.md`](apps/backend/README.md) | Backend: cómo correrlo, endpoints, variables de entorno, Liquibase |

@@ -18,6 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.minijira.auth.service.AuthenticatedUser;
+import com.minijira.user.entity.UserRole;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -101,7 +103,7 @@ class IssueServiceTest {
 
     @Test
     void should_assign_an_issue_to_a_member_of_its_project() {
-        authenticateAs("ana", "ROLE_ADMIN");
+        authenticateAs(1L, "ana", UserRole.ADMIN);
         Proyecto project = org.mockito.Mockito.mock(Proyecto.class);
         User assignee = org.mockito.Mockito.mock(User.class);
         given(project.getId()).willReturn(7L);
@@ -138,13 +140,12 @@ class IssueServiceTest {
 
     @Test
     void should_reject_the_assignment_when_the_caller_is_not_a_project_member() {
-        authenticateAs("carlos", "ROLE_USER");
+        authenticateAs(9L, "carlos", UserRole.USER);
         Proyecto project = org.mockito.Mockito.mock(Proyecto.class);
         User assignee = org.mockito.Mockito.mock(User.class);
         given(project.getId()).willReturn(7L);
         given(project.getMembers()).willReturn(Set.of(assignee));
         given(assignee.getId()).willReturn(3L);
-        given(assignee.getUsername()).willReturn("ana");
         given(userRepository.findById(3L)).willReturn(Optional.of(assignee));
         given(proyectoRepository.findById(7L)).willReturn(Optional.of(project));
 
@@ -162,8 +163,9 @@ class IssueServiceTest {
         verify(issueRepository, never()).save(org.mockito.ArgumentMatchers.any(Issue.class));
     }
 
-    private static void authenticateAs(String username, String authority) {
+    private static void authenticateAs(Long id, String username, UserRole role) {
+        AuthenticatedUser caller = new AuthenticatedUser(id, username, role);
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
-                username, "n/a", List.of(new SimpleGrantedAuthority(authority))));
+                caller, "n/a", List.of(new SimpleGrantedAuthority("ROLE_" + role.name()))));
     }
 }

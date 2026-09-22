@@ -2,18 +2,18 @@ import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
-import { UserService } from '../user.service';
+import { AuthService } from '../auth.service';
 import { UserSessionService } from '../user-session.service';
 
 @Component({
-  selector: 'app-account-page',
+  selector: 'app-login-page',
   imports: [FormsModule, RouterLink],
-  templateUrl: './account-page.component.html',
-  styleUrl: './account-page.component.css'
+  templateUrl: './login-page.component.html',
+  styleUrl: './login-page.component.css'
 })
-export class AccountPageComponent {
+export class LoginPageComponent {
   private readonly router = inject(Router);
-  private readonly userService = inject(UserService);
+  private readonly authService = inject(AuthService);
   readonly session = inject(UserSessionService);
 
   identifier = '';
@@ -26,12 +26,11 @@ export class AccountPageComponent {
       this.errorMessage = 'Ingresá tu correo o usuario y tu contraseña.';
       return;
     }
-
     this.isLoggingIn = true;
     this.errorMessage = '';
-    this.userService.login({ identifier: this.identifier.trim(), password: this.password }).subscribe({
-      next: (auth) => {
-        this.session.startSession(auth);
+    this.authService.login({ identifier: this.identifier.trim(), password: this.password }).subscribe({
+      next: (login) => {
+        this.session.startSession(login);
         this.router.navigate(['/issues']);
       },
       error: () => {

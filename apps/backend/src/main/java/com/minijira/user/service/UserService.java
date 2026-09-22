@@ -1,16 +1,12 @@
 package com.minijira.user.service;
 
 import com.minijira.user.dto.UserCreateRequest;
-import com.minijira.security.JwtTokenService;
-import com.minijira.user.dto.AuthResponse;
-import com.minijira.user.dto.UserLoginRequest;
 import com.minijira.user.dto.UserResponse;
 import com.minijira.user.dto.UserStatusRequest;
 import com.minijira.user.dto.UserUpdateRequest;
 import com.minijira.user.entity.User;
 import com.minijira.user.entity.UserRole;
 import com.minijira.user.exception.UserConflictException;
-import com.minijira.user.exception.UserAuthenticationException;
 import com.minijira.user.exception.UserNotFoundException;
 import com.minijira.user.mapper.UserMapper;
 import com.minijira.user.repository.UserRepository;
@@ -31,12 +27,10 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenService jwtTokenService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenService jwtTokenService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtTokenService = jwtTokenService;
     }
 
     @Transactional(readOnly = true)
@@ -50,37 +44,28 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserResponse login(UserLoginRequest request) {
-        return UserMapper.toResponse(authenticateUser(request));
+    public UserAuthenticationData findAuthenticationData(String identifier) {
+        User user = userRepository.findByIdentifier(normalize(identifier)).orElse(null);
+        return user == null ? null : new UserAuthenticationData(user.getId(), user.getUsername(), user.getPasswordHash(),
+                user.isActive(), user.getRole());
     }
 
-    public AuthResponse authenticate(UserLoginRequest request) {
-        User user = authenticateUser(request);
-        return new AuthResponse(
-                jwtTokenService.createToken(user),
-                "Bearer",
-                jwtTokenService.expirationSeconds(),
-                UserMapper.toResponse(user));
+    @Transactional(readOnly = true)
+    public UserAuthenticationData findActiveAuthenticationData(Long id) {
+        User user = userRepository.findById(id).filter(User::isActive).orElse(null);
+        return user == null ? null : new UserAuthenticationData(user.getId(), user.getUsername(), user.getPasswordHash(),
+                true, user.getRole());
     }
 
-    private User authenticateUser(UserLoginRequest request) {
-        String identifier = normalize(request.identifier());
-        User user = userRepository.findByIdentifier(identifier)
-                .orElseThrow(UserAuthenticationException::new);
-
-        if (!user.isActive() || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new UserAuthenticationException();
+    @Transactional(readOnly = true)
+    public void ensureActiveUser(Long id) {
+        User user = getUser(id);
+        if (!user.isActive()) {
+            throw new IllegalArgumentException("Assigned user is inactive");
         }
-
-        log.info("User authenticated: id={}", user.getId());
-        return user;
     }
 
     public UserResponse create(UserCreateRequest request) {
-        return create(request, true);
-    }
-
-    public UserResponse create(UserCreateRequest request, boolean canAssignRole) {
         String username = normalize(request.username());
         String email = normalize(request.email());
         ensureUnique(username, email, null);
@@ -91,7 +76,7 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setFirstName(request.firstName().trim());
         user.setLastName(request.lastName().trim());
-        user.setRole(canAssignRole && request.role() != null ? request.role() : UserRole.USER);
+        user.setRole(request.role() == null ? UserRole.USER : request.role());
         User saved = userRepository.save(user);
         log.info("User created: id={} role={}", saved.getId(), saved.getRole());
         return UserMapper.toResponse(saved);

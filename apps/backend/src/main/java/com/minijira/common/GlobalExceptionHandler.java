@@ -6,10 +6,11 @@ import com.minijira.proyecto.exception.ProyectoMemberConflictException;
 import com.minijira.proyecto.exception.ProyectoMemberNotFoundException;
 import com.minijira.proyecto.exception.ProyectoNotFoundException;
 import com.minijira.user.exception.UserConflictException;
-import com.minijira.user.exception.UserAuthenticationException;
+import com.minijira.auth.exception.AuthenticationException;
 import com.minijira.user.exception.UserNotFoundException;
 import com.minijira.weather.exception.WeatherUnavailableException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -68,10 +69,22 @@ public class GlobalExceptionHandler {
         return Map.of("error", ex.getMessage());
     }
 
-    @ExceptionHandler(UserAuthenticationException.class)
+    @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public Map<String, String> handleAuthentication(UserAuthenticationException ex) {
+    public Map<String, String> handleAuthentication(AuthenticationException ex) {
         return Map.of("error", "Credenciales inválidas o cuenta suspendida");
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Map<String, String> handleAccessDenied(AccessDeniedException ex) {
+        return Map.of("error", "No tiene permisos para realizar esta operación");
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleIllegalArgument(IllegalArgumentException ex) {
+        return Map.of("error", ex.getMessage());
     }
 
     @ExceptionHandler(WeatherUnavailableException.class)

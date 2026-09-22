@@ -1,5 +1,6 @@
 package com.minijira.proyecto.controller;
 
+import com.minijira.auth.service.JwtService;
 import com.minijira.proyecto.dto.ProyectoResponse;
 import com.minijira.proyecto.exception.ProyectoMemberConflictException;
 import com.minijira.proyecto.exception.ProyectoMemberNotFoundException;
@@ -7,6 +8,7 @@ import com.minijira.proyecto.exception.ProyectoNotFoundException;
 import com.minijira.proyecto.service.ProyectoService;
 import com.minijira.user.dto.UserResponse;
 import com.minijira.user.entity.UserRole;
+import com.minijira.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -39,6 +41,12 @@ class ProyectoControllerTest {
 
     @MockitoBean
     private ProyectoService proyectoService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private UserService userService;
 
     @Test
     void should_create_project_when_data_is_valid() throws Exception {

@@ -18,7 +18,7 @@ Estado vivo del proyecto respecto al [alcance del MVP (§7)](definicion-proyecto
 
 ## Tareas pendientes del MVP
 
-Orden sugerido: cada tarea depende de que la anterior esté terminada (login habilita asignación con usuario autenticado, etc.). El módulo `user` ya existe (ver arriba). Nomenclatura: el módulo `user` quedó en inglés (`/api/users`); los módulos nuevos usan el idioma que decida el equipo, consistente dentro del módulo. Numeración de changesets: el siguiente libre es `004`; revisá `db/changelog/` antes de crear uno. Referencia funcional: sección [§6 del documento máster](definicion-proyecto-colaborativo-dev-jr.md).
+Orden sugerido: cada tarea depende de que la anterior esté terminada (login habilita asignación con usuario autenticado, etc.). El módulo `user` ya existe (ver arriba). Nomenclatura: el módulo `user` quedó en inglés (`/api/users`); los módulos nuevos usan el idioma que decida el equipo, consistente dentro del módulo. Numeración de changesets: el siguiente libre es `006`; revisá `db/changelog/` antes de crear uno. Referencia funcional: sección [§6 del documento máster](definicion-proyecto-colaborativo-dev-jr.md).
 
 ### 1. Inicio de sesión con JWT — ✔ HECHO (PR #17)
 

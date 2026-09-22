@@ -5,7 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { User, UserRole } from '../../users/user.model';
 import { UserService } from '../../users/user.service';
-import { UserSessionService } from '../../users/user-session.service';
+import { UserSessionService } from '../../auth/user-session.service';
 import { Issue } from '../../issues/issue.model';
 import { IssueService } from '../../issues/issue.service';
 import { Project } from '../project.model';
@@ -68,7 +68,7 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   canManageProject(): boolean {
-    return this.session.hasRole('ADMIN');
+    return this.session.currentUser()?.role === 'ADMIN';
   }
 
   startEditing(): void {
