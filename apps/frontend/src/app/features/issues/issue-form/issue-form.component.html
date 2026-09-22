@@ -57,7 +57,7 @@
 
     <div class="field">
       <label for="assignee">Asignar a</label>
-      <select id="assignee" formControlName="assigneeId" [disabled]="!selectedProject || selectedProject.members.length === 0">
+      <select id="assignee" formControlName="assigneeId">
         <option [ngValue]="0">Sin asignar</option>
         @for (member of selectedProject?.members ?? []; track member.id) {
           <option [ngValue]="member.id">{{ member.firstName }} {{ member.lastName }} · {{ member.username }}</option>

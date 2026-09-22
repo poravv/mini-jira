@@ -45,6 +45,7 @@ export class IssueFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.syncAssigneeAvailability();
     this.loadProjects();
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam === null) {
@@ -70,6 +71,7 @@ export class IssueFormComponent implements OnInit {
           projectId: issue.projectId ?? 0,
           assigneeId: issue.assignee?.id ?? 0
         });
+        this.syncAssigneeAvailability();
         this.isLoading = false;
       },
       error: () => {
@@ -88,6 +90,17 @@ export class IssueFormComponent implements OnInit {
     const isMember = this.selectedProject?.members.some((member) => member.id === assigneeId) ?? false;
     if (!isMember) {
       this.form.controls.assigneeId.setValue(0);
+    }
+    this.syncAssigneeAvailability();
+  }
+
+  /** Sin proyecto o sin miembros no hay a quién asignar: se deshabilita el control, no el `<select>`. */
+  private syncAssigneeAvailability(): void {
+    const hasMembers = (this.selectedProject?.members.length ?? 0) > 0;
+    if (hasMembers) {
+      this.form.controls.assigneeId.enable();
+    } else {
+      this.form.controls.assigneeId.disable();
     }
   }
 
@@ -121,6 +134,7 @@ export class IssueFormComponent implements OnInit {
     this.projectService.getAll().subscribe({
       next: (projects) => {
         this.projects = projects;
+        this.syncAssigneeAvailability();
       },
       error: () => {
         this.errorMessage = 'No se pudieron cargar los proyectos.';
