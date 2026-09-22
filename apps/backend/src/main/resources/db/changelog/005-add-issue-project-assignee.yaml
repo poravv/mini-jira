@@ -26,3 +26,15 @@ databaseChangeLog:
             referencedColumnNames: id
             constraintName: fk_issue_asignado_a
             onDelete: SET NULL
+        - createIndex:
+            tableName: issues
+            indexName: idx_issues_proyecto
+            columns:
+              - column:
+                  name: proyecto_id
+        - createIndex:
+            tableName: issues
+            indexName: idx_issues_asignado_a
+            columns:
+              - column:
+                  name: asignado_a_id

@@ -40,7 +40,7 @@ public class ProyectoService {
 
     @Transactional(readOnly = true)
     public List<ProyectoResponse> findAll() {
-        return proyectoRepository.findAllOrdered().stream()
+        return proyectoRepository.findAllByOrderByNameAsc().stream()
                 .map(ProyectoMapper::toResponse)
                 .toList();
     }

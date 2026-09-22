@@ -3,6 +3,7 @@ package com.minijira.issue.repository;
 import com.minijira.issue.entity.Issue;
 import com.minijira.issue.entity.IssuePriority;
 import com.minijira.issue.entity.IssueStatus;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,6 +18,7 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
      * Busca incidencias filtrando por estado, prioridad, proyecto y asignado. Cada filtro es opcional:
      * si llega null, esa condición no se aplica y no recorta el resultado.
      */
+    @EntityGraph(attributePaths = {"proyecto", "assignee"})
     @Query("""
             select i from Issue i
             where (:status is null or i.status = :status)
