@@ -49,6 +49,8 @@
             <th>Título</th>
             <th>Estado</th>
             <th>Prioridad</th>
+            <th>Proyecto</th>
+            <th>Asignada a</th>
             <th>Fecha</th>
             <th>Acciones</th>
           </tr>
@@ -59,6 +61,8 @@
               <td>{{ issue.title }}</td>
               <td>{{ issue.status }}</td>
               <td>{{ issue.priority }}</td>
+              <td>{{ issue.projectName || 'Sin proyecto' }}</td>
+              <td>{{ issue.assignee ? (issue.assignee.firstName + ' ' + issue.assignee.lastName) : 'Sin asignar' }}</td>
               <td>{{ issue.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
               <td class="actions">
                 @if (session.currentUser()?.role === 'ADMIN' || session.currentUser()?.role === 'SUPPORT') {

@@ -14,10 +14,11 @@ Estado vivo del proyecto respecto al [alcance del MVP (§7)](definicion-proyecto
 - [x] Módulo weather: proxy de Open-Meteo con `RestClient` (backend) + tarjeta de clima en el header (frontend) — ver [`docs/RESTCLIENT-PROXY.md`](RESTCLIENT-PROXY.md)
 - [x] Gestión de usuarios: módulo `com.minijira.user` (entidad `User` → tabla `usuario`, roles `ADMIN`/`SUPPORT`/`USER`), endpoints `GET /api/users?active=`, `GET /api/users/{id}`, `POST /api/users` (201, BCrypt), `PUT /api/users/{id}`, `PATCH /api/users/{id}/status` (`{isActive}`); `UserResponse` nunca expone `passwordHash`; changesets `002-create-usuario-table` y `003-insert-admin-user` (admin/admin123, solo dev); feature Angular `users` (`/users`, `/users/new`, `/users/:id/edit`, todas con `adminGuard`) — `apps/backend/src/main/java/com/minijira/user/`, `apps/frontend/src/app/features/users/`
 - [x] Autenticación JWT — módulo `com.minijira.auth` (`POST /api/auth/login`, `JwtAuthenticationFilter` stateless, HS256 con `JWT_SECRET`, expiración `PT8H`), control de roles con `@PreAuthorize`, `authInterceptor` + `authGuard`/`adminGuard` en Angular; `POST /api/users/login` eliminado. Diagramas en [`ARCHITECTURE.md`](ARCHITECTURE.md#autenticación) — `apps/backend/src/main/java/com/minijira/auth/`, `apps/frontend/src/app/features/auth/`
+- [x] Proyectos: módulo `com.minijira.proyecto` (entidad `Proyecto` + tabla `proyecto_miembro`, changeset `004-create-proyecto-tables`), CRUD `/api/proyectos` y alta/baja de miembros restringidas a `ADMIN`; feature Angular `projects` (`/proyectos`, `/proyectos/new`, `/proyectos/:id`) — `apps/backend/src/main/java/com/minijira/proyecto/`, `apps/frontend/src/app/features/projects/`
 
 ## Tareas pendientes del MVP
 
-Orden sugerido: cada tarea depende de que la anterior esté terminada (login habilita asignación con usuario autenticado, etc.). El módulo `user` ya existe (ver arriba). Nomenclatura: el módulo `user` quedó en inglés (`/api/users`); los módulos nuevos usan el idioma que decida el equipo, consistente dentro del módulo. Numeración de changesets: el siguiente libre es `004`; revisá `db/changelog/` antes de crear uno. Referencia funcional: sección [§6 del documento máster](definicion-proyecto-colaborativo-dev-jr.md).
+Orden sugerido: cada tarea depende de que la anterior esté terminada (login habilita asignación con usuario autenticado, etc.). El módulo `user` ya existe (ver arriba). Nomenclatura: el módulo `user` quedó en inglés (`/api/users`); los módulos nuevos usan el idioma que decida el equipo, consistente dentro del módulo. Numeración de changesets: el siguiente libre es `006`; revisá `db/changelog/` antes de crear uno. Referencia funcional: sección [§6 del documento máster](definicion-proyecto-colaborativo-dev-jr.md).
 
 ### 1. Inicio de sesión con JWT — ✔ HECHO (PR #17)
 
@@ -34,7 +35,7 @@ Entregado tal cual estaba especificado, con estas diferencias respecto del plan 
 
 Rutas públicas reales: `POST /api/auth/login`, `GET /api/weather`, Swagger. Tabla completa de permisos y diagramas de secuencia en [`ARCHITECTURE.md`](ARCHITECTURE.md#autenticación).
 
-### 2. Proyectos
+### 2. Proyectos — ✔ HECHO (PR #19)
 
 **Objetivo**: CRUD de proyectos y gestión de sus miembros.
 **Depende de**: módulo `user` (hecho) — los miembros son usuarios existentes.
@@ -43,7 +44,7 @@ Rutas públicas reales: `POST /api/auth/login`, `GET /api/weather`, Swagger. Tab
 **Pruebas mínimas**: `should_create_project_when_data_is_valid`, `should_add_member_when_user_exists`, `should_return_404_when_project_not_found`.
 **Documentación a actualizar**: API.md/Swagger, MER (§12), este checklist.
 **Rama sugerida**: `feature/gestion-proyectos`.
-**Definición de terminado**: [ ] CRUD completo probado [ ] alta/baja de miembros probada [ ] tests en verde [ ] MER actualizado.
+**Definición de terminado**: [x] CRUD completo probado [x] alta/baja de miembros probada [x] tests en verde [ ] MER actualizado.
 
 ### 3. Asignación de incidencias a responsables
 
@@ -53,6 +54,7 @@ Rutas públicas reales: `POST /api/auth/login`, `GET /api/weather`, Swagger. Tab
 **Frontend**: selector de responsable en `issue-form`; columna "Asignado a" en `issue-list`.
 **Pruebas mínimas**: `should_assign_issue_when_user_exists`, `should_return_404_when_assignee_does_not_exist`.
 **Documentación a actualizar**: API.md/Swagger, este checklist.
+**Implementado en el PR #19 con otra forma**: la asignación viaja en el body de `PUT /api/issues/{id}` (`projectId` + `assigneeId`, changeset `005-add-issue-project-assignee`), no en un `PATCH /api/issues/{id}/assignee`; el asignado debe ser miembro del proyecto (400 si no lo es).
 **Rama sugerida**: `feature/asignacion-incidencias`.
 **Definición de terminado**: [ ] endpoint documentado [ ] listado muestra el responsable [ ] tests en verde.
 

@@ -6,10 +6,21 @@ import com.minijira.issue.entity.Issue;
 import com.minijira.issue.entity.IssuePriority;
 import com.minijira.issue.entity.IssueStatus;
 import com.minijira.issue.exception.IssueNotFoundException;
+import com.minijira.issue.exception.IssueAssignmentException;
 import com.minijira.issue.mapper.IssueMapper;
 import com.minijira.issue.repository.IssueRepository;
+import com.minijira.proyecto.entity.Proyecto;
+import com.minijira.proyecto.repository.ProyectoRepository;
+import com.minijira.proyecto.exception.ProyectoNotFoundException;
+import com.minijira.auth.service.AuthenticatedUser;
+import com.minijira.user.entity.User;
+import com.minijira.user.entity.UserRole;
+import com.minijira.user.exception.UserNotFoundException;
+import com.minijira.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,18 +43,25 @@ public class IssueService {
                     .thenComparing(Issue::getUpdatedAt, Comparator.reverseOrder());
 
     private final IssueRepository issueRepository;
+    private final ProyectoRepository proyectoRepository;
+    private final UserRepository userRepository;
 
-    public IssueService(IssueRepository issueRepository) {
+    public IssueService(IssueRepository issueRepository,
+                        ProyectoRepository proyectoRepository,
+                        UserRepository userRepository) {
         this.issueRepository = issueRepository;
+        this.proyectoRepository = proyectoRepository;
+        this.userRepository = userRepository;
     }
 
     /**
-     * Lista incidencias aplicando los filtros que vengan informados (ambos son opcionales)
+     * Lista incidencias aplicando los filtros que vengan informados (todos son opcionales)
      * y las devuelve ordenadas por prioridad, de la más urgente a la menos urgente.
      */
     @Transactional(readOnly = true)
-    public List<IssueResponse> findAll(IssueStatus status, IssuePriority priority) {
-        return issueRepository.search(status, priority).stream()
+    public List<IssueResponse> findAll(IssueStatus status, IssuePriority priority,
+                                       Long projectId, Long assigneeId) {
+        return issueRepository.search(status, priority, projectId, assigneeId).stream()
                 .sorted(MAS_URGENTES_PRIMERO)
                 .map(IssueMapper::toResponse)
                 .toList();
@@ -55,7 +73,9 @@ public class IssueService {
     }
 
     public IssueResponse create(IssueRequest request) {
-        Issue issue = issueRepository.save(IssueMapper.toEntity(request));
+        Issue issue = IssueMapper.toEntity(request);
+        applyAssignment(issue, request);
+        issue = issueRepository.save(issue);
         log.info("Issue created: id={} status={} priority={}", issue.getId(), issue.getStatus(), issue.getPriority());
         return IssueMapper.toResponse(issue);
     }
@@ -63,6 +83,7 @@ public class IssueService {
     public IssueResponse update(Long id, IssueRequest request) {
         Issue issue = getIssue(id);
         IssueMapper.updateEntity(issue, request);
+        applyAssignment(issue, request);
         Issue updatedIssue = issueRepository.save(issue);
         log.info("Issue updated: id={} status={} priority={}", updatedIssue.getId(), updatedIssue.getStatus(), updatedIssue.getPriority());
         return IssueMapper.toResponse(updatedIssue);
@@ -81,4 +102,62 @@ public class IssueService {
         });
     }
 
+    private void applyAssignment(Issue issue, IssueRequest request) {
+        if (request.projectId() == null) {
+            if (request.assigneeId() != null) {
+                throw new IssueAssignmentException("An assignee requires a project");
+            }
+            issue.setProyecto(null);
+            issue.setAssignee(null);
+            return;
+        }
+
+        Proyecto project = proyectoRepository.findById(request.projectId()).orElseThrow(() -> {
+            log.warn("Project not found while assigning issue: projectId={}", request.projectId());
+            return new ProyectoNotFoundException(request.projectId());
+        });
+        issue.setProyecto(project);
+
+        if (request.assigneeId() == null) {
+            issue.setAssignee(null);
+            return;
+        }
+
+        User assignee = userRepository.findById(request.assigneeId()).orElseThrow(() -> {
+            log.warn("User not found while assigning issue: userId={}", request.assigneeId());
+            return new UserNotFoundException(request.assigneeId());
+        });
+        boolean isProjectMember = project.getMembers().stream()
+                .anyMatch(member -> member.getId().equals(assignee.getId()));
+        if (!isProjectMember) {
+            throw new IssueAssignmentException("User " + assignee.getId() + " is not a member of project " + project.getId());
+        }
+        requireCallerBelongsToProject(project);
+        issue.setAssignee(assignee);
+    }
+
+    /**
+     * Solo un ADMIN o un miembro del proyecto puede asignar incidencias dentro de ese proyecto:
+     * de lo contrario cualquier usuario autenticado podría repartir trabajo en equipos ajenos.
+     */
+    private void requireCallerBelongsToProject(Proyecto project) {
+        Authentication caller = SecurityContextHolder.getContext().getAuthentication();
+        if (caller == null || !caller.isAuthenticated()
+                || !(caller.getPrincipal() instanceof AuthenticatedUser authenticatedCaller)) {
+            throw new IssueAssignmentException("An authenticated user is required to assign an issue");
+        }
+
+        if (authenticatedCaller.role() == UserRole.ADMIN) {
+            return;
+        }
+
+        boolean isCallerMember = project.getMembers().stream()
+                .anyMatch(member -> member.getId().equals(authenticatedCaller.id()));
+        if (!isCallerMember) {
+            log.warn("Caller is not allowed to assign issues in this project: callerId={} projectId={}",
+                    authenticatedCaller.id(), project.getId());
+            throw new IssueAssignmentException(
+                    "User " + authenticatedCaller.username() + " is not a member of project " + project.getId());
+        }
+    }
 }

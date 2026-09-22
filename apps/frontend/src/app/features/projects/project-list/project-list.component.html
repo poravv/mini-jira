@@ -1,0 +1,40 @@
+<div class="list-header">
+  <div>
+    <p class="eyebrow">Organización del trabajo</p>
+    <h2>Proyectos</h2>
+  </div>
+  <a class="btn btn-primary" routerLink="/proyectos/new">Nuevo proyecto</a>
+</div>
+
+@if (errorMessage) {
+  <p class="alert" role="alert">{{ errorMessage }}</p>
+}
+
+@if (isLoading) {
+  <p class="muted">Cargando proyectos...</p>
+} @else if (projects.length === 0) {
+  <section class="empty-state">
+    <h3>No hay proyectos todavía</h3>
+    <p class="muted">Creá un proyecto para empezar a organizar las incidencias del equipo.</p>
+    <a class="btn btn-primary" routerLink="/proyectos/new">Crear proyecto</a>
+  </section>
+} @else {
+  <div class="project-grid">
+    @for (project of projects; track project.id) {
+      <article class="project-card">
+        <div class="project-card-header">
+          <div>
+            <p class="project-id">Proyecto #{{ project.id }}</p>
+            <h3>{{ project.name }}</h3>
+          </div>
+          <span class="member-count">{{ project.members.length }} miembros</span>
+        </div>
+        <p class="project-description">{{ project.description || 'Sin descripción.' }}</p>
+        <p class="project-date muted">Actualizado {{ project.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+        <div class="actions">
+          <a class="btn btn-secondary" [routerLink]="['/proyectos', project.id]">Ver proyecto</a>
+        </div>
+      </article>
+    }
+  </div>
+}

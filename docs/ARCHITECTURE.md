@@ -12,13 +12,13 @@ flowchart TD
     API --> INC[Incidencias ✔]
     API --> US[Usuarios ✔]
     API --> WE[Weather ✔]
-    API -.-> PR[Proyectos]
+    API --> PR[Proyectos ✔]
     API -.-> CO[Comentarios]
     API -.-> AU[Auditoría y logs]
     AU_TH -->|UserService| US
     INC --> PG[(PostgreSQL)]
     US --> PG
-    PR -.-> PG
+    PR --> PG
     CO -.-> PG
     AU -.-> MG[(MongoDB)]
     WE --> OM[(Open-Meteo)]
@@ -43,7 +43,7 @@ com.minijira.<modulo>/
 
 Reglas: el flujo es siempre controller → service → repository; los módulos no se importan entre sí sin acuerdo previo; la API expone DTOs, nunca entidades. El esquema de PostgreSQL se versiona únicamente con changesets de Liquibase, que corren al arrancar el backend.
 
-Módulos existentes: `auth`, `issue`, `user`, `weather` y el paquete transversal `common`. Un módulo nunca accede al `repository` de otro: se comunica a través de su `Service` — `auth` usa `UserService`, nunca `UserRepository`.
+Módulos existentes: `auth`, `issue`, `proyecto`, `user`, `weather` y el paquete transversal `common`. Un módulo nunca accede al `repository` de otro: se comunica a través de su `Service` — `auth` usa `UserService`, nunca `UserRepository`.
 
 `com.minijira.weather` es el ejemplo de módulo sin base de datos: mantiene la misma separación controller → service → repository, pero el `repository` llama a una API externa (Open-Meteo) por HTTP en vez de a PostgreSQL. Ver [`docs/RESTCLIENT-PROXY.md`](RESTCLIENT-PROXY.md).
 
@@ -62,6 +62,8 @@ Stateless con JWT firmado en HS256. El secreto viene de la variable de entorno `
 | `POST`/`PUT /api/issues/**` | `ADMIN` o `SUPPORT` |
 | `DELETE /api/issues/{id}` | `ADMIN` |
 | `/api/users/**` | `ADMIN` |
+| `GET /api/proyectos`, `GET /api/proyectos/{id}`, `POST /api/proyectos` | Autenticado (cualquier rol) |
+| `PUT`/`DELETE /api/proyectos/{id}` y alta/baja de miembros | `ADMIN` |
 
 ### Inicio de sesión
 
@@ -134,7 +136,7 @@ En el frontend, `authInterceptor` agrega el header a toda petición a `/api/` sa
 | Cambios de estado/prioridad con reglas | Parcial: campos editables por PUT; faltan reglas de transición |
 | Módulo `user`: usuarios y roles en `/api/users` + Liquibase 002/003 + feature Angular `users` | ✔ Construido |
 | Autenticación JWT | ✔ Construido — módulo `auth`, `POST /api/auth/login`, filtro stateless y control de roles |
-| Proyectos | Pendiente (junior) |
+| Proyectos | ✔ Construido — módulo `proyecto`, `/api/proyectos` + miembros + feature Angular `projects` |
 | Comentarios | Pendiente (junior) |
 | Auditoría e historial en MongoDB | Pendiente (junior) — Mongo ya está en compose, sin uso |
 | Dashboard de métricas | Pendiente (junior) |

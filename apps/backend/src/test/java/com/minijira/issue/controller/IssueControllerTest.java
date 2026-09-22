@@ -47,9 +47,8 @@ class IssueControllerTest {
     @Test
     void should_return_issues_when_listing() throws Exception {
         IssueResponse issue = new IssueResponse(1L, "Fix login", null,
-                IssueStatus.PENDIENTE, IssuePriority.MEDIA, Instant.now(), Instant.now());
-        given(issueService.findAll(org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.isNull()))
-                .willReturn(List.of(issue));
+                IssueStatus.PENDIENTE, IssuePriority.MEDIA, null, null, null, Instant.now(), Instant.now());
+        given(issueService.findAll(null, null, null, null)).willReturn(List.of(issue));
 
         mockMvc.perform(get("/api/issues"))
                 .andExpect(status().isOk())
@@ -60,15 +59,14 @@ class IssueControllerTest {
 
     @Test
     void should_pass_the_filters_to_the_service_when_listing() throws Exception {
-        given(issueService.findAll(org.mockito.ArgumentMatchers.eq(IssueStatus.PENDIENTE), org.mockito.ArgumentMatchers.eq(IssuePriority.ALTA)))
-                .willReturn(List.of());
+        given(issueService.findAll(IssueStatus.PENDIENTE, IssuePriority.ALTA, null, null)).willReturn(List.of());
 
         mockMvc.perform(get("/api/issues")
                         .param("status", "PENDIENTE")
                         .param("priority", "ALTA"))
                 .andExpect(status().isOk());
 
-        verify(issueService).findAll(org.mockito.ArgumentMatchers.eq(IssueStatus.PENDIENTE), org.mockito.ArgumentMatchers.eq(IssuePriority.ALTA));
+        verify(issueService).findAll(IssueStatus.PENDIENTE, IssuePriority.ALTA, null, null);
     }
 
     @Test
@@ -84,7 +82,7 @@ class IssueControllerTest {
     @Test
     void should_create_an_issue_without_an_assigned_user() throws Exception {
         IssueResponse createdIssue = new IssueResponse(1L, "Fix registration", null,
-                IssueStatus.PENDIENTE, IssuePriority.MEDIA, Instant.now(), Instant.now());
+                IssueStatus.PENDIENTE, IssuePriority.MEDIA, null, null, null, Instant.now(), Instant.now());
         given(issueService.create(org.mockito.ArgumentMatchers.any())).willReturn(createdIssue);
 
         mockMvc.perform(post("/api/issues")
@@ -97,17 +95,18 @@ class IssueControllerTest {
     @Test
     void should_update_an_issue() throws Exception {
         IssueResponse updatedIssue = new IssueResponse(1L, "Fix registration", "Updated description",
-                IssueStatus.EN_PROGRESO, IssuePriority.ALTA, Instant.now(), Instant.now());
+                IssueStatus.EN_PROGRESO, IssuePriority.ALTA, 7L, "Portal interno", null, Instant.now(), Instant.now());
         given(issueService.update(org.mockito.ArgumentMatchers.eq(1L), org.mockito.ArgumentMatchers.any()))
                 .willReturn(updatedIssue);
 
         mockMvc.perform(put("/api/issues/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"Fix registration\",\"description\":\"Updated description\",\"status\":\"EN_PROGRESO\",\"priority\":\"ALTA\"}"))
+                        .content("{\"title\":\"Fix registration\",\"description\":\"Updated description\",\"status\":\"EN_PROGRESO\",\"priority\":\"ALTA\",\"projectId\":7}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.title").value("Fix registration"))
-                .andExpect(jsonPath("$.status").value("EN_PROGRESO"));
+                .andExpect(jsonPath("$.status").value("EN_PROGRESO"))
+                .andExpect(jsonPath("$.projectId").value(7));
     }
 
     @Test

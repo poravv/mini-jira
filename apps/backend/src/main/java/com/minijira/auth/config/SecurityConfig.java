@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -41,6 +42,10 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
         return http.csrf(csrf -> csrf.disable()).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**", "/api/weather").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/proyectos/*/miembros").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/proyectos/*/miembros/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/proyectos/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/proyectos/*").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, exception) -> response.sendError(HttpStatus.UNAUTHORIZED.value())))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class).build();

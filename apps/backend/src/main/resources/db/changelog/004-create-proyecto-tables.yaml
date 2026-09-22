@@ -1,0 +1,70 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-proyecto-tables
+      author: mini-jira
+      changes:
+        - createTable:
+            tableName: proyecto
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(150)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: proyecto_miembro
+            columns:
+              - column:
+                  name: proyecto_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: usuario_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: proyecto_miembro
+            columnNames: proyecto_id, usuario_id
+            constraintName: pk_proyecto_miembro
+        - addForeignKeyConstraint:
+            baseTableName: proyecto_miembro
+            baseColumnNames: proyecto_id
+            referencedTableName: proyecto
+            referencedColumnNames: id
+            constraintName: fk_proyecto_miembro_proyecto
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: proyecto_miembro
+            baseColumnNames: usuario_id
+            referencedTableName: usuario
+            referencedColumnNames: id
+            constraintName: fk_proyecto_miembro_usuario
+            onDelete: CASCADE
+        - createIndex:
+            tableName: proyecto_miembro
+            indexName: idx_proyecto_miembro_usuario
+            columns:
+              - column:
+                  name: usuario_id
