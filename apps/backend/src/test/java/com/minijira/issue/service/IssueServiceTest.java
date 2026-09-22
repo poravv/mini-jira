@@ -154,6 +154,14 @@ class IssueServiceTest {
         verify(issueRepository, never()).save(org.mockito.ArgumentMatchers.any(Issue.class));
     }
 
+    @Test
+    void should_reject_an_assignee_when_no_project_is_given() {
+        assertThrows(IssueAssignmentException.class, () -> issueService.create(new IssueRequest(
+                "Asignación sin proyecto", null, IssueStatus.PENDIENTE, IssuePriority.MEDIA, null, 3L)));
+
+        verify(issueRepository, never()).save(org.mockito.ArgumentMatchers.any(Issue.class));
+    }
+
     private static void authenticateAs(String username, String authority) {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
                 username, "n/a", List.of(new SimpleGrantedAuthority(authority))));
