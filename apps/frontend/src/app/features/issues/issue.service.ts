@@ -2,7 +2,15 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { Issue, IssueInput, IssuePriority, IssueStatus } from './issue.model';
+import {
+  Issue,
+  IssueInput,
+  IssuePriority,
+  IssuePriorityUpdate,
+  IssueStatus,
+  IssueStatusUpdate,
+  IssueUpdateInput
+} from './issue.model';
 
 /**
  * Cliente HTTP del recurso issues: única pieza que habla con el backend (/api/issues,
@@ -32,8 +40,16 @@ export class IssueService {
     return this.http.post<Issue>(this.baseUrl, input);
   }
 
-  update(id: number, input: IssueInput): Observable<Issue> {
+  update(id: number, input: IssueUpdateInput): Observable<Issue> {
     return this.http.put<Issue>(`${this.baseUrl}/${id}`, input);
+  }
+
+  updateStatus(id: number, input: IssueStatusUpdate): Observable<Issue> {
+    return this.http.patch<Issue>(`${this.baseUrl}/${id}/status`, input);
+  }
+
+  updatePriority(id: number, input: IssuePriorityUpdate): Observable<Issue> {
+    return this.http.patch<Issue>(`${this.baseUrl}/${id}/priority`, input);
   }
 
   delete(id: number): Observable<void> {

@@ -1,6 +1,7 @@
 package com.minijira.common;
 
 import com.minijira.issue.exception.IssueNotFoundException;
+import com.minijira.issue.exception.InvalidIssueTransitionException;
 import com.minijira.user.exception.UserConflictException;
 import com.minijira.auth.exception.AuthenticationException;
 import com.minijira.user.exception.UserNotFoundException;
@@ -8,6 +9,7 @@ import com.minijira.weather.exception.WeatherUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -26,6 +28,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IssueNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleNotFound(IssueNotFoundException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidIssueTransitionException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, String> handleInvalidIssueTransition(InvalidIssueTransitionException ex) {
         return Map.of("error", ex.getMessage());
     }
 
@@ -57,6 +65,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleIllegalArgument(IllegalArgumentException ex) {
         return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleUnreadableRequestBody(HttpMessageNotReadableException ex) {
+        return Map.of("error", "Invalid request body");
     }
 
     @ExceptionHandler(WeatherUnavailableException.class)

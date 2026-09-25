@@ -25,8 +25,7 @@ label {
 }
 
 input,
-textarea,
-select {
+textarea {
   width: 100%;
   padding: 0.5rem 0.65rem;
   border: 1px solid var(--color-border);
@@ -37,8 +36,7 @@ select {
 }
 
 input:focus,
-textarea:focus,
-select:focus {
+textarea:focus {
   outline: 2px solid var(--color-primary);
   outline-offset: 1px;
 }
@@ -53,4 +51,39 @@ select:focus {
   display: flex;
   gap: 0.5rem;
   margin-top: 1.5rem;
+}
+
+.workflow-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.workflow-field {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.workflow-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.workflow-value {
+  margin: 0 0 0.75rem;
+  font-weight: 700;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.workflow-sync {
+  grid-column: 1 / -1;
+  margin: 0;
 }

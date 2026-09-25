@@ -1,10 +1,13 @@
 package com.minijira.issue.service;
 
 import com.minijira.issue.dto.IssueRequest;
+import com.minijira.issue.dto.IssuePriorityUpdateRequest;
 import com.minijira.issue.dto.IssueResponse;
+import com.minijira.issue.dto.IssueStatusUpdateRequest;
 import com.minijira.issue.entity.Issue;
 import com.minijira.issue.entity.IssuePriority;
 import com.minijira.issue.entity.IssueStatus;
+import com.minijira.issue.exception.InvalidIssueTransitionException;
 import com.minijira.issue.exception.IssueNotFoundException;
 import com.minijira.issue.mapper.IssueMapper;
 import com.minijira.issue.repository.IssueRepository;
@@ -65,6 +68,32 @@ public class IssueService {
         IssueMapper.updateEntity(issue, request);
         Issue updatedIssue = issueRepository.save(issue);
         log.info("Issue updated: id={} status={} priority={}", updatedIssue.getId(), updatedIssue.getStatus(), updatedIssue.getPriority());
+        return IssueMapper.toResponse(updatedIssue);
+    }
+
+    public IssueResponse updateStatus(Long id, IssueStatusUpdateRequest request) {
+        Issue issue = getIssue(id);
+        IssueStatus currentStatus = issue.getStatus();
+        if (!IssueTransitionPolicy.isStatusTransitionAllowed(currentStatus, request.status())) {
+            throw new InvalidIssueTransitionException("status", currentStatus, request.status());
+        }
+
+        issue.setStatus(request.status());
+        Issue updatedIssue = issueRepository.save(issue);
+        log.info("Issue status updated: id={} status={}", updatedIssue.getId(), updatedIssue.getStatus());
+        return IssueMapper.toResponse(updatedIssue);
+    }
+
+    public IssueResponse updatePriority(Long id, IssuePriorityUpdateRequest request) {
+        Issue issue = getIssue(id);
+        IssuePriority currentPriority = issue.getPriority();
+        if (!IssueTransitionPolicy.isPriorityTransitionAllowed(currentPriority, request.priority())) {
+            throw new InvalidIssueTransitionException("priority", currentPriority, request.priority());
+        }
+
+        issue.setPriority(request.priority());
+        Issue updatedIssue = issueRepository.save(issue);
+        log.info("Issue priority updated: id={} priority={}", updatedIssue.getId(), updatedIssue.getPriority());
         return IssueMapper.toResponse(updatedIssue);
     }
 

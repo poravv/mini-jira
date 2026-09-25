@@ -16,6 +16,9 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
 security:
+  auth:
+    # El bypass solo se habilita en application-local.yml, que Docker Compose activa para desarrollo local.
+    local-bypass: false
   jwt:
     # Obligatorio en todos los entornos; use una cadena aleatoria de al menos 32 bytes.
     secret: ${JWT_SECRET}

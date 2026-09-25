@@ -1,7 +1,9 @@
 package com.minijira.issue.controller;
 
 import com.minijira.issue.dto.IssueRequest;
+import com.minijira.issue.dto.IssuePriorityUpdateRequest;
 import com.minijira.issue.dto.IssueResponse;
+import com.minijira.issue.dto.IssueStatusUpdateRequest;
 import com.minijira.issue.entity.IssuePriority;
 import com.minijira.issue.entity.IssueStatus;
 import com.minijira.issue.service.IssueService;
@@ -12,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -65,6 +68,20 @@ public class IssueController {
     @Operation(summary = "Update an issue")
     public IssueResponse update(@PathVariable Long id, @Valid @RequestBody IssueRequest request) {
         return issueService.update(id, request);
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
+    @Operation(summary = "Update an issue's status")
+    public IssueResponse updateStatus(@PathVariable Long id, @Valid @RequestBody IssueStatusUpdateRequest request) {
+        return issueService.updateStatus(id, request);
+    }
+
+    @PatchMapping("/{id}/priority")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
+    @Operation(summary = "Update an issue's priority")
+    public IssueResponse updatePriority(@PathVariable Long id, @Valid @RequestBody IssuePriorityUpdateRequest request) {
+        return issueService.updatePriority(id, request);
     }
 
     @DeleteMapping("/{id}")

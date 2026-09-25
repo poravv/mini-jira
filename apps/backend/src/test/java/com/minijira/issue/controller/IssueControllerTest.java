@@ -5,6 +5,7 @@ import com.minijira.issue.dto.IssueResponse;
 import com.minijira.issue.entity.IssuePriority;
 import com.minijira.issue.entity.IssueStatus;
 import com.minijira.issue.exception.IssueNotFoundException;
+import com.minijira.issue.exception.InvalidIssueTransitionException;
 import com.minijira.issue.service.IssueService;
 import com.minijira.user.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -108,6 +110,113 @@ class IssueControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.title").value("Fix registration"))
                 .andExpect(jsonPath("$.status").value("EN_PROGRESO"));
+    }
+
+    @Test
+    void should_update_status_when_transition_is_valid() throws Exception {
+        IssueResponse updatedIssue = new IssueResponse(1L, "Fix registration", null,
+                IssueStatus.EN_PROGRESO, IssuePriority.MEDIA, Instant.now(), Instant.now());
+        given(issueService.updateStatus(org.mockito.ArgumentMatchers.eq(1L), org.mockito.ArgumentMatchers.any()))
+                .willReturn(updatedIssue);
+
+        mockMvc.perform(patch("/api/issues/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"EN_PROGRESO\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("EN_PROGRESO"));
+    }
+
+    @Test
+    void should_return_409_when_status_transition_is_invalid() throws Exception {
+        willThrow(new InvalidIssueTransitionException("status", IssueStatus.CERRADA, IssueStatus.PENDIENTE))
+                .given(issueService).updateStatus(org.mockito.ArgumentMatchers.eq(1L), org.mockito.ArgumentMatchers.any());
+
+        mockMvc.perform(patch("/api/issues/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"PENDIENTE\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    void should_return_404_when_changing_status_of_a_missing_issue() throws Exception {
+        willThrow(new IssueNotFoundException(99L))
+                .given(issueService).updateStatus(org.mockito.ArgumentMatchers.eq(99L), org.mockito.ArgumentMatchers.any());
+
+        mockMvc.perform(patch("/api/issues/99/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"EN_PROGRESO\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void should_return_400_when_status_is_missing() throws Exception {
+        mockMvc.perform(patch("/api/issues/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":null}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fields.status").exists());
+    }
+
+    @Test
+    void should_return_400_when_status_value_is_unknown() throws Exception {
+        mockMvc.perform(patch("/api/issues/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"DESCONOCIDO\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Invalid request body"));
+    }
+
+    @Test
+    void should_return_400_when_status_body_is_json_null() throws Exception {
+        mockMvc.perform(patch("/api/issues/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                .content("null"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Invalid request body"));
+    }
+
+    @Test
+    void should_update_priority_when_value_is_valid() throws Exception {
+        IssueResponse updatedIssue = new IssueResponse(1L, "Fix registration", null,
+                IssueStatus.PENDIENTE, IssuePriority.CRITICA, Instant.now(), Instant.now());
+        given(issueService.updatePriority(org.mockito.ArgumentMatchers.eq(1L), org.mockito.ArgumentMatchers.any()))
+                .willReturn(updatedIssue);
+
+        mockMvc.perform(patch("/api/issues/1/priority")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"priority\":\"CRITICA\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.priority").value("CRITICA"));
+    }
+
+    @Test
+    void should_return_400_when_priority_is_missing() throws Exception {
+        mockMvc.perform(patch("/api/issues/1/priority")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"priority\":null}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fields.priority").exists());
+    }
+
+    @Test
+    void should_return_400_when_priority_value_is_unknown() throws Exception {
+        mockMvc.perform(patch("/api/issues/1/priority")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"priority\":\"DESCONOCIDA\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Invalid request body"));
+    }
+
+    @Test
+    void should_return_404_when_changing_priority_of_a_missing_issue() throws Exception {
+        willThrow(new IssueNotFoundException(99L))
+                .given(issueService).updatePriority(org.mockito.ArgumentMatchers.eq(99L), org.mockito.ArgumentMatchers.any());
+
+        mockMvc.perform(patch("/api/issues/99/priority")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"priority\":\"ALTA\"}"))
+                .andExpect(status().isNotFound());
     }
 
     @Test

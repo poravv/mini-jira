@@ -1,0 +1,4 @@
+security:
+  auth:
+    # Desarrollo local únicamente: simula un ADMIN para probar la API desde Swagger sin JWT.
+    local-bypass: true

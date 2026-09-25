@@ -1,10 +1,13 @@
 package com.minijira.issue.service;
 
+import com.minijira.issue.dto.IssuePriorityUpdateRequest;
 import com.minijira.issue.dto.IssueResponse;
+import com.minijira.issue.dto.IssueStatusUpdateRequest;
 import com.minijira.issue.entity.Issue;
 import com.minijira.issue.entity.IssuePriority;
 import com.minijira.issue.entity.IssueStatus;
 import com.minijira.issue.exception.IssueNotFoundException;
+import com.minijira.issue.exception.InvalidIssueTransitionException;
 import com.minijira.issue.repository.IssueRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -75,5 +78,61 @@ class IssueServiceTest {
         assertThrows(IssueNotFoundException.class, () -> issueService.deleteById(99L));
 
         verify(issueRepository, never()).delete(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void should_change_status_when_transition_is_valid() {
+        Issue issue = issue("Fix login", IssuePriority.MEDIA);
+        issue.setStatus(IssueStatus.PENDIENTE);
+        given(issueRepository.findById(1L)).willReturn(Optional.of(issue));
+        given(issueRepository.save(issue)).willReturn(issue);
+
+        IssueResponse updated = issueService.updateStatus(1L, new IssueStatusUpdateRequest(IssueStatus.EN_PROGRESO));
+
+        assertEquals(IssueStatus.EN_PROGRESO, updated.status());
+        assertEquals(IssuePriority.MEDIA, updated.priority());
+        verify(issueRepository).save(issue);
+    }
+
+    @Test
+    void should_reject_status_change_when_transition_is_invalid() {
+        Issue issue = issue("Fix login", IssuePriority.MEDIA);
+        issue.setStatus(IssueStatus.CERRADA);
+        given(issueRepository.findById(1L)).willReturn(Optional.of(issue));
+
+        assertThrows(InvalidIssueTransitionException.class,
+                () -> issueService.updateStatus(1L, new IssueStatusUpdateRequest(IssueStatus.PENDIENTE)));
+
+        assertEquals(IssueStatus.CERRADA, issue.getStatus());
+        verify(issueRepository, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void should_throw_when_changing_status_of_a_missing_issue() {
+        given(issueRepository.findById(99L)).willReturn(Optional.empty());
+
+        assertThrows(IssueNotFoundException.class,
+                () -> issueService.updateStatus(99L, new IssueStatusUpdateRequest(IssueStatus.EN_PROGRESO)));
+    }
+
+    @Test
+    void should_change_priority_when_transition_is_valid() {
+        Issue issue = issue("Fix login", IssuePriority.BAJA);
+        given(issueRepository.findById(1L)).willReturn(Optional.of(issue));
+        given(issueRepository.save(issue)).willReturn(issue);
+
+        IssueResponse updated = issueService.updatePriority(1L, new IssuePriorityUpdateRequest(IssuePriority.CRITICA));
+
+        assertEquals(IssuePriority.CRITICA, updated.priority());
+        assertEquals(IssueStatus.PENDIENTE, updated.status());
+        verify(issueRepository).save(issue);
+    }
+
+    @Test
+    void should_throw_when_changing_priority_of_a_missing_issue() {
+        given(issueRepository.findById(99L)).willReturn(Optional.empty());
+
+        assertThrows(IssueNotFoundException.class,
+                () -> issueService.updatePriority(99L, new IssuePriorityUpdateRequest(IssuePriority.ALTA)));
     }
 }

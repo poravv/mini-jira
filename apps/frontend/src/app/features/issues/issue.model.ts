@@ -17,3 +17,14 @@ export interface Issue {
 
 /** Payload del POST: el backend asigna id y timestamps. */
 export type IssueInput = Omit<Issue, 'id' | 'createdAt' | 'updatedAt'>;
+
+/** Payload del PUT de datos generales; estado y prioridad cambian por PATCH. */
+export type IssueUpdateInput = Pick<IssueInput, 'title' | 'description'>;
+
+export interface IssueStatusUpdate {
+  status: IssueStatus;
+}
+
+export interface IssuePriorityUpdate {
+  priority: IssuePriority;
+}

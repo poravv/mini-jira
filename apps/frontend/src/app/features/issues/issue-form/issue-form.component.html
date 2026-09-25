@@ -24,28 +24,62 @@
     <textarea id="description" formControlName="description" rows="4"></textarea>
   </div>
 
-  <div class="field-row">
-    <div class="field">
-      <label for="status">Estado</label>
-      <select id="status" formControlName="status">
-        @for (status of statuses; track status) {
-          <option [value]="status">{{ status }}</option>
+  @if (isEditing) {
+    <section class="workflow-actions" aria-label="Acciones de estado y prioridad">
+      <div class="workflow-field">
+        <p class="workflow-label">Estado actual</p>
+        <p class="workflow-value" aria-live="polite">{{ currentStatus }}</p>
+        @if (allowedStatusChanges.length > 0) {
+          <div class="action-buttons">
+            @for (status of allowedStatusChanges; track status) {
+              <button
+                type="button"
+                class="btn btn-secondary"
+                [disabled]="isWorkflowBusy"
+                (click)="changeStatus(status)">
+                {{ isUpdatingStatus ? 'Actualizando...' : 'Cambiar a ' + status }}
+              </button>
+            }
+          </div>
+        } @else {
+          <p class="muted">La incidencia está cerrada y no admite más cambios de estado.</p>
         }
-      </select>
-    </div>
+      </div>
 
-    <div class="field">
-      <label for="priority">Prioridad</label>
-      <select id="priority" formControlName="priority">
-        @for (priority of priorities; track priority) {
-          <option [value]="priority">{{ priority }}</option>
-        }
-      </select>
-    </div>
-  </div>
+      <div class="workflow-field">
+        <p class="workflow-label">Prioridad actual</p>
+        <p class="workflow-value" aria-live="polite">{{ currentPriority }}</p>
+        <div class="action-buttons">
+          @for (priority of allowedPriorityChanges; track priority) {
+            <button
+              type="button"
+              class="btn btn-secondary"
+              [disabled]="isWorkflowBusy"
+              (click)="changePriority(priority)">
+              {{ isUpdatingPriority ? 'Actualizando...' : 'Cambiar a ' + priority }}
+            </button>
+          }
+        </div>
+      </div>
+      @if (isSynchronizingWorkflow) {
+        <p class="muted workflow-sync" aria-live="polite">Actualizando los valores actuales de la incidencia...</p>
+      }
+    </section>
+  } @else {
+    <section class="workflow-actions" aria-label="Valores iniciales de la incidencia">
+      <div class="workflow-field">
+        <p class="workflow-label">Estado inicial</p>
+        <p class="workflow-value">PENDIENTE</p>
+      </div>
+      <div class="workflow-field">
+        <p class="workflow-label">Prioridad inicial</p>
+        <p class="workflow-value">MEDIA</p>
+      </div>
+    </section>
+  }
 
   <div class="form-actions">
-    <button type="submit" class="btn btn-primary" [disabled]="isSaving">{{ isEditing ? 'Guardar cambios' : 'Guardar' }}</button>
+    <button type="submit" class="btn btn-primary" [disabled]="isWorkflowBusy">{{ isSaving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Guardar' }}</button>
     <a class="btn btn-secondary" routerLink="/issues">Cancelar</a>
   </div>
   </form>

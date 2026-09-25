@@ -44,12 +44,30 @@ describe('IssueService', () => {
       status: issue.status,
       priority: issue.priority
     };
-    service.update(7, input).subscribe((result) => expect(result).toEqual(issue));
+    service.update(7, { title: input.title, description: input.description }).subscribe((result) => expect(result).toEqual(issue));
 
     const request = httpTesting.expectOne('/api/issues/7');
     expect(request.request.method).toBe('PUT');
-    expect(request.request.body).toEqual(input);
+    expect(request.request.body).toEqual({ title: input.title, description: input.description });
     request.flush(issue);
+  });
+
+  it('actualiza el estado con PATCH', () => {
+    service.updateStatus(7, { status: 'RESUELTA' }).subscribe((result) => expect(result.status).toBe('RESUELTA'));
+
+    const request = httpTesting.expectOne('/api/issues/7/status');
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ status: 'RESUELTA' });
+    request.flush({ ...issue, status: 'RESUELTA' });
+  });
+
+  it('actualiza la prioridad con PATCH', () => {
+    service.updatePriority(7, { priority: 'CRITICA' }).subscribe((result) => expect(result.priority).toBe('CRITICA'));
+
+    const request = httpTesting.expectOne('/api/issues/7/priority');
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ priority: 'CRITICA' });
+    request.flush({ ...issue, priority: 'CRITICA' });
   });
 
   it('elimina una incidencia con DELETE', () => {
