@@ -4,6 +4,12 @@
   <p class="alert">{{ errorMessage }}</p>
 }
 
+@if (!canEditIssue) {
+  <p class="alert">
+    Solo los usuarios ADMIN o SUPPORT pueden modificar incidencias.
+  </p>
+}
+
 @if (isLoading) {
   <p class="muted">Cargando incidencia...</p>
 } @else {
@@ -28,9 +34,14 @@
     <div class="field">
       <label for="status">Estado</label>
       <select id="status" formControlName="status">
-        @for (status of statuses; track status) {
-          <option [value]="status">{{ status }}</option>
-        }
+         @for (status of statuses; track status) {
+           <option
+             [value]="status"
+             [disabled]="!isStatusAllowed(status)"
+           >
+             {{ status }}
+           </option>
+         }
       </select>
     </div>
 
@@ -70,8 +81,17 @@
   </div>
 
   <div class="form-actions">
-    <button type="submit" class="btn btn-primary" [disabled]="isSaving">{{ isEditing ? 'Guardar cambios' : 'Guardar' }}</button>
-    <a class="btn btn-secondary" routerLink="/issues">Cancelar</a>
+    <button
+      type="submit"
+      class="btn btn-primary"
+      [disabled]="isSaving || !canEditIssue"
+   >
+     {{ isSaving ? 'Guardando...' : 'Guardar' }}
+   </button>
+
+     <a class="btn btn-secondary" routerLink="/issues">
+      Cancelar
+     </a>
   </div>
   </form>
 }

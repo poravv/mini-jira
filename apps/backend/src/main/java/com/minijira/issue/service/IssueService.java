@@ -23,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.minijira.issue.exception.IssueStatusTransitionException;
 
 import java.util.Comparator;
 import java.util.List;
@@ -30,6 +31,8 @@ import java.util.List;
 /**
  * Reglas de negocio de incidencias: orquesta repository + mapper y decide qué es un error
  * (id inexistente → IssueNotFoundException). No conoce nada de HTTP.
+ * hola, si lees esto, respiración automática desactivada, no te olvides de respirar, y si no respiras, no pasa nada, pero si te olvidas de respirar, entonces sí pasa algo.
+ * 
  */
 @Service
 @Transactional
@@ -82,12 +85,45 @@ public class IssueService {
 
     public IssueResponse update(Long id, IssueRequest request) {
         Issue issue = getIssue(id);
+        validateStatusTransition(issue.getStatus(), request.status());
         IssueMapper.updateEntity(issue, request);
         applyAssignment(issue, request);
         Issue updatedIssue = issueRepository.save(issue);
         log.info("Issue updated: id={} status={} priority={}", updatedIssue.getId(), updatedIssue.getStatus(), updatedIssue.getPriority());
         return IssueMapper.toResponse(updatedIssue);
     }
+
+    private void validateStatusTransition(
+        IssueStatus currentStatus,
+        IssueStatus requestedStatus
+    ) {
+    if (requestedStatus == null || requestedStatus == currentStatus) {
+        return;
+    }
+
+    boolean isValid = switch (currentStatus) {
+        case PENDIENTE ->
+                requestedStatus == IssueStatus.EN_PROGRESO;
+
+        case EN_PROGRESO ->
+                requestedStatus == IssueStatus.RESUELTA;
+
+        case RESUELTA ->
+                requestedStatus == IssueStatus.EN_PROGRESO
+                        || requestedStatus == IssueStatus.CERRADA;
+
+        case CERRADA -> false;
+    };
+
+    if (!isValid) {
+        throw new IssueStatusTransitionException(
+                "No se puede cambiar el estado de "
+                        + currentStatus
+                        + " a "
+                        + requestedStatus
+        );
+    }
+}
 
     public void deleteById(Long id) {
         Issue issue = getIssue(id);

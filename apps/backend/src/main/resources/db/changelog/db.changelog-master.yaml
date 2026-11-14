@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/004-create-proyecto-tables.yaml
   - include:
       file: db/changelog/005-add-issue-project-assignee.yaml
+  - include: 
+      file: db/changelog/006-add-issue-project-assignee-indexes.yaml

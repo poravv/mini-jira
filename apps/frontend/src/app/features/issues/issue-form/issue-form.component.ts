@@ -1,8 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-
-import { ISSUE_PRIORITIES, ISSUE_STATUSES, IssueInput } from '../issue.model';
+import { UserSessionService } from '../../auth/user-session.service';
+import {
+  ISSUE_PRIORITIES,
+  ISSUE_STATUSES,
+  IssueInput,
+  IssueStatus
+} from '../issue.model';
 import { IssueService } from '../issue.service';
 import { Project } from '../../projects/project.model';
 import { ProjectService } from '../../projects/project.service';
@@ -24,11 +29,19 @@ export class IssueFormComponent implements OnInit {
   readonly statuses = ISSUE_STATUSES;
   readonly priorities = ISSUE_PRIORITIES;
 
+  readonly session = inject(UserSessionService);
+
+  get canEditIssue(): boolean {
+  const role = this.session.currentUser()?.role;
+  return role === 'ADMIN' || role === 'SUPPORT';
+}
+
   errorMessage = '';
   isEditing = false;
   isLoading = false;
   isSaving = false;
   private issueId: number | null = null;
+  private currentStatus: IssueStatus | null = null;
   projects: Project[] = [];
 
   readonly form = this.fb.group({
@@ -63,6 +76,8 @@ export class IssueFormComponent implements OnInit {
     this.isLoading = true;
     this.issueService.getById(id).subscribe({
       next: (issue) => {
+        this.currentStatus = issue.status;
+
         this.form.setValue({
           title: issue.title,
           description: issue.description ?? '',
@@ -83,6 +98,33 @@ export class IssueFormComponent implements OnInit {
 
   get selectedProject(): Project | undefined {
     return this.projects.find((project) => project.id === this.form.controls.projectId.value);
+  }
+
+  isStatusAllowed(status: IssueStatus): boolean {
+   // Al crear una incidencia no estamos haciendo una transición.
+    if (!this.isEditing || this.currentStatus === null) {
+      return true;
+   }
+
+   // El estado actual siempre debe poder mantenerse.
+    if (status === this.currentStatus) {
+      return true;
+    }
+
+   // Determinar si la transición de estado es válida.  
+   switch (this.currentStatus) {
+    case 'PENDIENTE':
+      return status === 'EN_PROGRESO';
+
+    case 'EN_PROGRESO':
+      return status === 'RESUELTA';
+
+    case 'RESUELTA':
+      return status === 'EN_PROGRESO' || status === 'CERRADA';
+
+    case 'CERRADA':
+      return false;
+   }
   }
 
   onProjectChange(): void {

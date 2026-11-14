@@ -7,6 +7,7 @@ import com.minijira.issue.entity.IssueStatus;
 import com.minijira.issue.exception.IssueNotFoundException;
 import com.minijira.issue.service.IssueService;
 import com.minijira.user.service.UserService;
+import com.minijira.issue.exception.IssueStatusTransitionException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -108,6 +109,29 @@ class IssueControllerTest {
                 .andExpect(jsonPath("$.status").value("EN_PROGRESO"))
                 .andExpect(jsonPath("$.projectId").value(7));
     }
+
+    @Test
+        void should_return_409_when_status_transition_is_invalid() throws Exception {
+         given(issueService.update(
+                 org.mockito.ArgumentMatchers.eq(1L),
+                 org.mockito.ArgumentMatchers.any()
+        )).willThrow(new IssueStatusTransitionException(
+                    "No se puede cambiar el estado de PENDIENTE a CERRADA"
+         ));
+
+          mockMvc.perform(put("/api/issues/1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                           .content("""
+                                    {
+                                      "title": "Incidencia de prueba",
+                                   "status": "CERRADA",
+                                      "priority": "MEDIA"
+                                    }
+                                    """))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.error")
+                            .value("No se puede cambiar el estado de PENDIENTE a CERRADA"));
+        }
 
     @Test
     void should_return_204_when_deleting_an_existing_issue() throws Exception {

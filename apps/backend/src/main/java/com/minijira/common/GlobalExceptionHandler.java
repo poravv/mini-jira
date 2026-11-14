@@ -16,6 +16,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import com.minijira.issue.exception.IssueStatusTransitionException;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,6 +38,14 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleIssueAssignment(IssueAssignmentException ex) {
         return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(IssueStatusTransitionException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, String> handleIssueStatusTransition(
+        IssueStatusTransitionException ex
+    ) {
+    return Map.of("error", ex.getMessage());
     }
 
     @ExceptionHandler(ProyectoNotFoundException.class)

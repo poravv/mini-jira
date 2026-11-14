@@ -46,7 +46,7 @@ Rutas públicas reales: `POST /api/auth/login`, `GET /api/weather`, Swagger. Tab
 **Rama sugerida**: `feature/gestion-proyectos`.
 **Definición de terminado**: [x] CRUD completo probado [x] alta/baja de miembros probada [x] tests en verde [ ] MER actualizado.
 
-### 3. Asignación de incidencias a responsables
+### 3. Asignación de incidencias a responsables -HECHO 
 
 **Objetivo**: permitir asignar una incidencia a un usuario del proyecto.
 **Depende de**: módulo `user` (hecho), Inicio de sesión con JWT (hecho), Proyectos.

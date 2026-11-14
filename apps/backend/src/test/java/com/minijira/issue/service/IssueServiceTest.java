@@ -23,6 +23,7 @@ import com.minijira.user.entity.UserRole;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.minijira.issue.exception.IssueStatusTransitionException;
 
 import java.util.List;
 import java.util.Optional;
@@ -161,6 +162,61 @@ class IssueServiceTest {
                 "Asignación sin proyecto", null, IssueStatus.PENDIENTE, IssuePriority.MEDIA, null, 3L)));
 
         verify(issueRepository, never()).save(org.mockito.ArgumentMatchers.any(Issue.class));
+    }
+
+    @Test
+    void should_change_status_when_transition_is_valid() {
+         Issue issue = issue("Incidencia de prueba", IssuePriority.MEDIA);
+
+         given(issueRepository.findById(1L))
+               .willReturn(Optional.of(issue));
+
+         given(issueRepository.save(org.mockito.ArgumentMatchers.any(Issue.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+         IssueResponse response = issueService.update(
+            1L,
+            new IssueRequest(
+                    "Incidencia de prueba",
+                    null,
+                    IssueStatus.EN_PROGRESO,
+                    IssuePriority.MEDIA,
+                    null,
+                    null
+            )
+    );
+
+    assertEquals(IssueStatus.EN_PROGRESO, response.status());
+
+    verify(issueRepository).save(issue);
+    }
+
+    @Test
+    void should_reject_status_change_when_transition_is_invalid() {
+        Issue issue = issue("Incidencia de prueba", IssuePriority.MEDIA);
+
+        given(issueRepository.findById(1L))
+               .willReturn(Optional.of(issue));
+
+     assertThrows(
+            IssueStatusTransitionException.class,
+            () -> issueService.update(
+                    1L,
+                    new IssueRequest(
+                            "Incidencia de prueba",
+                            null,
+                            IssueStatus.CERRADA,
+                            IssuePriority.MEDIA,
+                            null,
+                            null
+                    )
+            )
+    );
+
+        verify(
+                issueRepository,
+                never()
+        ).save(org.mockito.ArgumentMatchers.any(Issue.class));
     }
 
     private static void authenticateAs(Long id, String username, UserRole role) {
