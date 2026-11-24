@@ -1,3 +1,5 @@
+import { User } from '../users/user.model';
+
 // Tipos del recurso Issue: espejo del contrato JSON del backend (verificar en Swagger).
 export type IssueStatus = 'PENDIENTE' | 'EN_PROGRESO' | 'RESUELTA' | 'CERRADA';
 export type IssuePriority = 'BAJA' | 'MEDIA' | 'ALTA' | 'CRITICA';
@@ -11,9 +13,18 @@ export interface Issue {
   description?: string;
   status: IssueStatus;
   priority: IssuePriority;
+  projectId: number | null;
+  projectName: string | null;
+  assignee: User | null;
   createdAt: string;
   updatedAt: string;
 }
 
-/** Payload del POST: el backend asigna id y timestamps. */
-export type IssueInput = Omit<Issue, 'id' | 'createdAt' | 'updatedAt'>;
+export interface IssueInput {
+  title: string;
+  description: string;
+  status: IssueStatus;
+  priority: IssuePriority;
+  projectId: number | null;
+  assigneeId: number | null;
+}

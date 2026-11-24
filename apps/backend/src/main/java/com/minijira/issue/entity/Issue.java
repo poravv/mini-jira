@@ -1,5 +1,7 @@
 package com.minijira.issue.entity;
 
+import com.minijira.proyecto.entity.Proyecto;
+import com.minijira.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -10,6 +12,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.FetchType;
 
 import java.time.Instant;
 
@@ -38,6 +43,14 @@ public class Issue {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private IssuePriority priority = IssuePriority.MEDIA;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "proyecto_id")
+    private Proyecto proyecto;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "asignado_a_id")
+    private User assignee;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -90,6 +103,22 @@ public class Issue {
 
     public void setPriority(IssuePriority priority) {
         this.priority = priority;
+    }
+
+    public Proyecto getProyecto() {
+        return proyecto;
+    }
+
+    public void setProyecto(Proyecto proyecto) {
+        this.proyecto = proyecto;
+    }
+
+    public User getAssignee() {
+        return assignee;
+    }
+
+    public void setAssignee(User assignee) {
+        this.assignee = assignee;
     }
 
     public Instant getCreatedAt() {

@@ -13,6 +13,8 @@ public record IssueRequest(
         @NotBlank @Size(max = 150) String title,
         String description,
         IssueStatus status,
-        IssuePriority priority
+        IssuePriority priority,
+        Long projectId,
+        Long assigneeId
 ) {
 }

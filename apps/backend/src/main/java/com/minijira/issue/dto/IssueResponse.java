@@ -2,6 +2,7 @@ package com.minijira.issue.dto;
 
 import com.minijira.issue.entity.IssuePriority;
 import com.minijira.issue.entity.IssueStatus;
+import com.minijira.user.dto.UserResponse;
 
 import java.time.Instant;
 
@@ -12,6 +13,9 @@ public record IssueResponse(
         String description,
         IssueStatus status,
         IssuePriority priority,
+        Long projectId,
+        String projectName,
+        UserResponse assignee,
         Instant createdAt,
         Instant updatedAt
 ) {

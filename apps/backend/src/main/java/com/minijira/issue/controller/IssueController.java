@@ -2,18 +2,24 @@ package com.minijira.issue.controller;
 
 import com.minijira.issue.dto.IssueRequest;
 import com.minijira.issue.dto.IssueResponse;
+import com.minijira.issue.entity.IssuePriority;
+import com.minijira.issue.entity.IssueStatus;
 import com.minijira.issue.service.IssueService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -33,9 +39,13 @@ public class IssueController {
     }
 
     @GetMapping
-    @Operation(summary = "List all issues")
-    public List<IssueResponse> list() {
-        return issueService.findAll();
+    @Operation(summary = "List issues",
+            description = "Filtra por estado, prioridad, proyecto y asignado (todos opcionales) y devuelve las incidencias más urgentes primero.")
+    public List<IssueResponse> list(@RequestParam(required = false) IssueStatus status,
+                                    @RequestParam(required = false) IssuePriority priority,
+                                    @RequestParam(required = false) Long projectId,
+                                    @RequestParam(required = false) Long assigneeId) {
+        return issueService.findAll(status, priority, projectId, assigneeId);
     }
 
     @GetMapping("/{id}")
@@ -45,11 +55,26 @@ public class IssueController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create an issue")
     public IssueResponse create(@Valid @RequestBody IssueRequest request) {
         return issueService.create(request);
     }
 
-    // No hay PUT ni DELETE a propósito: editar y eliminar incidencias son tareas pendientes del equipo (ver backlog en el README raíz).
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT')")
+    @Operation(summary = "Update an issue")
+    public IssueResponse update(@PathVariable Long id, @Valid @RequestBody IssueRequest request) {
+        return issueService.update(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Delete an issue by id")
+    public void delete(@PathVariable Long id) {
+        issueService.deleteById(id);
+    }
+
 }

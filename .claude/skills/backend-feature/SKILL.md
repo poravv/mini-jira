@@ -20,9 +20,10 @@ com.minijira.<modulo>/
 
 ## Pasos
 
-1. Mirá el módulo `issue` como referencia de estilo y estructura.
-2. Creá la entidad y su changeset de Liquibase en `src/main/resources/db/changelog/` (un archivo por cambio, incluido en el changelog maestro). **Nunca** modifiques un changeset ya aplicado ni uses DDL manual.
+1. Mirá los módulos `issue` y `user` como referencia de estilo y estructura.
+2. Creá la entidad y su changeset de Liquibase en `src/main/resources/db/changelog/` (un archivo por cambio, incluido en el changelog maestro; numeración correlativa: revisá el último `NNN-` existente antes de crear uno). **Nunca** modifiques un changeset ya aplicado ni uses DDL manual.
 3. Creá repository → service → controller, en ese orden. El controller solo traduce HTTP ↔ DTO; la lógica va en el service.
+   Si necesitás datos de otro módulo, usá su `Service`; nunca inyectes el `repository` de otro módulo.
 4. Endpoints bajo `/api/<recurso>` en plural. Documentalos con anotaciones OpenAPI (aparecen solos en Swagger).
 5. Validá la entrada en los DTO (`@NotBlank`, `@Size`, etc.) y manejá errores con el handler global (400/404/500 consistentes).
 6. Logs útiles con SLF4J: qué pasó y con qué id. Nunca secretos ni datos sensibles.

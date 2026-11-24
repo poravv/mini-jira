@@ -14,3 +14,18 @@ spring:
     open-in-view: false
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
+
+security:
+  jwt:
+    # Obligatorio en todos los entornos; use una cadena aleatoria de al menos 32 bytes.
+    secret: ${JWT_SECRET}
+    expiration: PT8H
+  # Timeouts de todo RestClient de la app (hoy solo Open-Meteo): un proveedor lento no debe colgar la API.
+  http:
+    client:
+      connect-timeout: 3s
+      read-timeout: 3s
+
+weather:
+  open-meteo:
+    url: https://api.open-meteo.com/v1/forecast

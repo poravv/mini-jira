@@ -3,6 +3,7 @@ package com.minijira.issue.mapper;
 import com.minijira.issue.dto.IssueRequest;
 import com.minijira.issue.dto.IssueResponse;
 import com.minijira.issue.entity.Issue;
+import com.minijira.user.mapper.UserMapper;
 
 /** Convierte entre los DTO de la API y la entidad JPA, para que el resto del código no mezcle ambas capas. */
 public final class IssueMapper {
@@ -31,8 +32,22 @@ public final class IssueMapper {
                 issue.getDescription(),
                 issue.getStatus(),
                 issue.getPriority(),
+                issue.getProyecto() == null ? null : issue.getProyecto().getId(),
+                issue.getProyecto() == null ? null : issue.getProyecto().getName(),
+                issue.getAssignee() == null ? null : UserMapper.toResponse(issue.getAssignee()),
                 issue.getCreatedAt(),
                 issue.getUpdatedAt()
         );
+    }
+
+    public static void updateEntity(Issue issue, IssueRequest request) {
+        issue.setTitle(request.title());
+        issue.setDescription(request.description());
+        if (request.status() != null) {
+            issue.setStatus(request.status());
+        }
+        if (request.priority() != null) {
+            issue.setPriority(request.priority());
+        }
     }
 }

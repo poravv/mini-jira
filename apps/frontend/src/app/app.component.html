@@ -1,9 +1,33 @@
-<header class="app-header">
-  <div class="container">
-    <a routerLink="/issues" class="app-title">Mini Jira</a>
-  </div>
-</header>
+@if (!isAuthRoute) {
+  <header class="app-header">
+    <div class="container app-header-content">
+      <a routerLink="/issues" class="app-brand" aria-label="Mini Jira, ir a incidencias">
+        <span class="app-brand-mark" aria-hidden="true">MJ</span>
+        <span>Mini Jira</span>
+      </a>
 
-<main class="container">
-  <router-outlet />
+      @if (session.currentUser()) {
+        <nav class="app-nav" aria-label="Navegación principal">
+          <a routerLink="/issues" routerLinkActive="active">Incidencias</a>
+          <a routerLink="/proyectos" routerLinkActive="active">Proyectos</a>
+          @if (session.currentUser()?.role === 'ADMIN') {
+            <a routerLink="/users" routerLinkActive="active">Usuarios</a>
+          }
+        </nav>
+      }
+
+      <div class="app-header-actions">
+        <app-weather-card />
+        <a class="user-logo-link" routerLink="/auth/login" aria-label="Abrir cuenta" title="Mi cuenta">
+          <img src="/user-logo.png" alt="" class="user-logo" />
+        </a>
+      </div>
+    </div>
+  </header>
+}
+
+<main class="app-main">
+  <div class="container app-main-content">
+    <router-outlet />
+  </div>
 </main>

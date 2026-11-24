@@ -12,6 +12,7 @@ El objetivo principal es **formativo**: que desarrolladores junior practiquen un
 | Backend | Java 21 · Spring Boot 3 · Maven |
 | BD relacional | PostgreSQL 16 (migraciones con Liquibase) |
 | BD no relacional | MongoDB 7 (reservada para auditoría, aún sin uso) |
+| Autenticación | JWT stateless (Spring Security + jjwt) |
 | API docs | Swagger / OpenAPI |
 | Entorno local | Docker Compose |
 
@@ -23,7 +24,8 @@ mini-jira/
 │   ├── backend/          # API Spring Boot (puerto 8080)
 │   └── frontend/         # SPA Angular (puerto 4200)
 ├── docs/                 # Definición del proyecto y arquitectura
-├── .claude/skills/       # Skills para agentes de IA
+├── .claude/skills/       # Skills para agentes de IA (Claude)
+├── .agents/skills/       # Skills para agentes de IA (Codex), copia idéntica
 ├── docker-compose.yml    # Postgres + Mongo + backend + frontend
 ├── .env.example          # Variables de entorno de ejemplo
 ├── AGENTS.md             # Contexto para agentes de IA (Claude Code / Codex)
@@ -39,6 +41,7 @@ mini-jira/
 
 ```bash
 cp .env.example .env
+# JWT_SECRET es obligatorio (mínimo 32 caracteres); sin él el backend no arranca
 docker compose up --build
 ```
 
@@ -52,20 +55,33 @@ docker compose up --build
 
 ## Probar el CRUD con curl
 
+Salvo `/api/auth/login` y `/api/weather`, todos los endpoints exigen `Authorization: Bearer <token>`.
+
 ```bash
-# Crear una incidencia
-curl -X POST http://localhost:8080/api/issues \
+# 1. Obtener el token (admin/admin123 es el usuario semilla de desarrollo)
+TOKEN=$(curl -s -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
+  -d '{"identifier": "admin", "password": "admin123"}' | jq -r .accessToken)
+
+# 2. Crear una incidencia (requiere rol ADMIN o SUPPORT)
+curl -X POST http://localhost:8080/api/issues \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d '{"title": "Error al guardar", "description": "Falla el formulario de alta", "priority": "ALTA", "status": "PENDIENTE"}'
 
-# Listar incidencias
-curl http://localhost:8080/api/issues
+# Listar incidencias (ordenadas de la mas urgente a la menos urgente)
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/issues
+
+# Listar filtrando por estado y/o prioridad (ambos parametros son opcionales)
+curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/api/issues?status=PENDIENTE&priority=ALTA"
 
 # Consultar una incidencia
-curl http://localhost:8080/api/issues/1
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/issues/1
+
+# Clima actual de Asunción (proxy de Open-Meteo) — ruta pública
+curl http://localhost:8080/api/weather
 ```
 
-El contrato exacto de los campos está en Swagger. **No existen `PUT` ni `DELETE` todavía**: editar y eliminar incidencias son tareas del backlog (ver abajo).
+El contrato exacto de los campos está en Swagger. Las incidencias se pueden editar con `PUT /api/issues/{id}` (ADMIN o SUPPORT) y eliminar con `DELETE /api/issues/{id}` (ADMIN).
 
 ## Modo desarrollo sin Docker
 
@@ -78,7 +94,7 @@ cd apps/backend
 ./mvnw spring-boot:run
 ```
 
-Usa por defecto `DB_HOST=localhost`, `DB_NAME=minijira`, `DB_USER=minijira`, `DB_PASSWORD=minijira`. Liquibase aplica las migraciones al arrancar.
+Usa por defecto `DB_HOST=localhost`, `DB_NAME=minijira`, `DB_USER=minijira`, `DB_PASSWORD=minijira`. `JWT_SECRET` no tiene default: exportala antes de arrancar. Liquibase aplica las migraciones al arrancar.
 
 **Frontend** (puerto 4200, con proxy de `/api` al backend):
 
@@ -106,24 +122,21 @@ Checklist mínimo antes de abrir el PR:
 - [ ] Documentación actualizada.
 - [ ] Podés explicar tu código.
 
-Detalle completo en [CONTRIBUTING.md](CONTRIBUTING.md).
+Paso a paso con diagramas (crear rama → commit → push → PR → merge a `develop`): [`docs/GIT-FLOW.md`](docs/GIT-FLOW.md). Reglas completas en [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Backlog para juniors
 
-El estado vivo del proyecto se sigue en [`docs/CHECKLIST.md`](docs/CHECKLIST.md) (se actualiza en cada PR). Las primeras tareas sugeridas son completar el CRUD de incidencias:
+El CRUD de incidencias, la gestión de usuarios (`/api/users`) y la autenticación JWT (`/api/auth/login`, con control de roles) ya están completos. El estado vivo del proyecto y el detalle de cada tarea pendiente del MVP (objetivo, endpoints, changesets, pruebas mínimas, rama sugerida) se siguen en [`docs/CHECKLIST.md`](docs/CHECKLIST.md) — es la fuente de verdad del avance y se actualiza en cada PR.
 
-1. **Editar incidencia**: implementar `PUT /api/issues/{id}` + formulario de edición (rama sugerida: `feature/editar-incidencia`).
-2. **Eliminar incidencia**: implementar `DELETE /api/issues/{id}` + botón en el listado (rama sugerida: `feature/eliminar-incidencia`).
-
-Cada módulo pendiente es una funcionalidad vertical (pantalla + API + BD + pruebas). Detalle en la sección 6 del [documento de definición](docs/definicion-proyecto-colaborativo-dev-jr.md).
+Cada módulo pendiente es una funcionalidad vertical (pantalla + API + BD + pruebas). Detalle funcional en la sección 6 del [documento de definición](docs/definicion-proyecto-colaborativo-dev-jr.md); orden de ejecución sugerido y tareas concretas en `docs/CHECKLIST.md`.
 
 | Módulo | Descripción | Doc |
 | --- | --- | --- |
-| Autenticación JWT | Login seguro, roles, control de acceso | §6.1 |
-| Usuarios | Registro, perfil, activación/desactivación | §6.1 |
 | Proyectos | CRUD de proyectos y sus miembros | §6.2 |
+| Reglas de estado/prioridad | Transiciones válidas (hoy editable libremente por PUT) | §6.3 |
 | Comentarios | Comentarios en incidencias, permisos de autor | §6.4 |
 | Auditoría (Mongo) | Historial de cambios de las incidencias | §6.5 |
+| Logs estructurados | Logs JSON, correlación de requests, errores en Mongo | §6.6 |
 | Dashboard | Métricas por estado, prioridad y actividad | §6.7 |
 
 ## Troubleshooting
@@ -138,7 +151,9 @@ Cada módulo pendiente es una funcionalidad vertical (pantalla + API + BD + prue
 | --- | --- |
 | [`docs/definicion-proyecto-colaborativo-dev-jr.md`](docs/definicion-proyecto-colaborativo-dev-jr.md) | Definición completa del proyecto (alcance, módulos, flujo de trabajo) |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Arquitectura: monolito modular, estructura de módulos, construido vs. pendiente |
+| [`docs/GIT-FLOW.md`](docs/GIT-FLOW.md) | Flujo Git paso a paso con diagramas: rama, commit, push, Pull Request y merge a `develop` |
 | [`docs/CHECKLIST.md`](docs/CHECKLIST.md) | Checklist vivo de avance del MVP (se actualiza en cada PR) |
+| [`docs/RESTCLIENT-PROXY.md`](docs/RESTCLIENT-PROXY.md) | Cómo consumir un servicio externo con `RestClient` (patrón proxy), con el módulo weather como ejemplo |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Reglas de colaboración: ramas, commits, PRs y code review |
 | [`AGENTS.md`](AGENTS.md) | Guía para asistentes IA (Claude Code / Codex): contexto y convenciones |
 | [`apps/backend/README.md`](apps/backend/README.md) | Backend: cómo correrlo, endpoints, variables de entorno, Liquibase |

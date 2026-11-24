@@ -1,0 +1,19 @@
+<section class="weather-card" aria-label="Clima actual" aria-live="polite">
+  @if (isLoading) {
+    <p class="weather-status">Cargando clima...</p>
+  } @else if (hasError) {
+    <p class="weather-status" role="alert">No se pudo obtener el clima</p>
+  } @else if (weather) {
+    <p class="weather-main">
+      <span class="weather-city">{{ weather.city }}</span>
+      <span class="weather-temperature">{{ weather.temperature | number: '1.0-1' }} °C</span>
+      <span class="weather-description">{{ description }}</span>
+    </p>
+    <dl class="weather-details">
+      <dt>Humedad</dt>
+      <dd>{{ weather.humidity }} %</dd>
+      <dt>Viento</dt>
+      <dd>{{ weather.windSpeed | number: '1.0-1' }} km/h</dd>
+    </dl>
+  }
+</section>

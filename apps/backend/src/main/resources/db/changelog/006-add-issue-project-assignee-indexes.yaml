@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-add-issue-project-assignee-indexes
+      author: mini-jira
+      changes:
+        - createIndex:
+            tableName: issues
+            indexName: idx_issues_proyecto
+            columns:
+              - column:
+                  name: proyecto_id
+        - createIndex:
+            tableName: issues
+            indexName: idx_issues_asignado_a
+            columns:
+              - column:
+                  name: asignado_a_id
